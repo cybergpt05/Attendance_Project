@@ -109,11 +109,12 @@ def add_user():
     if form.validate_on_submit():
         first_name = form.first_name.data
         last_name = form.last_name.data
+        uni_number = form.uni_number.data
         email = form.email.data
         password = form.password.data
         account_type = form.account_type.data
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-        newUser = User(first_name=first_name,last_name=last_name,email=email,password=hashed_password,account_type=account_type)
+        newUser = User(first_name=first_name,last_name=last_name,email=email,password=hashed_password,account_type=account_type,uni_number=uni_number)
         db.session.add(newUser)
         db.session.commit()
         flash('User added successfully!','info')
