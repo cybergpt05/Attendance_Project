@@ -1,0 +1,63 @@
+.card{
+    display: flex;
+    padding: 20px !important;
+    justify-content: center !important;
+    margin-top: 150px;
+    width: 28rem !important;
+    height: 370px;
+}
+
+.container{
+    display: flex;
+    justify-content: center !important;
+    padding-top: 0 !important;
+}
+
+.img-container{
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: auto !important;
+    padding-top: 15px !important;
+}
+fieldset{
+    margin-bottom: auto !important;
+}
+.banner{
+    margin: 0;
+    padding: 0;
+    width: 45px;
+    height: 55px;
+}
+.email,.password{
+    height: 2.5rem !important;
+    margin-bottom: 15px !important;
+}
+.label{
+    color: #4c5a73;
+    margin-bottom: 5px !important;
+}
+.login-button{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px #162d44 solid;
+    padding-bottom: 10px !important;
+    line-height: normal;
+    width: 90px !important;
+}
+.login-button:hover{
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+}
+@media screen and (max-width: 768px) {
+    .card{
+        display: flex;
+        justify-content: center;
+        padding: 20px !important;
+        margin-top: 130px;
+        width: 20rem !important;
+        height: 370px;
+    }
+}

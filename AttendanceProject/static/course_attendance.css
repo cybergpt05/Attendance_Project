@@ -1,0 +1,38 @@
+.download-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    background-color: white;
+    color: #162d44;
+    border: 1px #162d44 solid !important;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: 2rem !important;
+}
+
+.download-btn:hover {
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+}
+select{
+    background-color: white !important;
+    border: 1px solid #808080;
+    border-radius: 5px !important;
+    height: 3rem !important;
+    margin-left: 1rem !important;
+}
+@media screen and (max-width: 768px) {
+    .download-btn{
+        margin-left: 0 !important;
+        margin-top: 1rem !important;
+    }
+    select{
+        margin-left: 0 !important;
+    }
+}

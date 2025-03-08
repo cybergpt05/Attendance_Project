@@ -1,0 +1,122 @@
+.name-label{
+    margin-top: 100px !important;
+    margin-left: 2rem !important;
+    margin-bottom: 25px !important;
+}
+.course-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.qr-section {
+    flex: 1;
+    text-align: center;
+}
+
+.qr-section img {
+    max-width: 200px;
+    height: auto;
+}
+
+.students-section {
+    flex: 1;
+    padding-left: 20px;
+}
+
+.students-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.students-section li {
+    background: #f8f9fa;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-id {
+    font-weight: bold;
+    color: #162d44;
+}
+
+.student-name {
+    flex: 1;
+    margin: 0 10px;
+    color: #162d44 !important;
+    margin-left: 50px !important;
+}
+
+.attendance-status {
+    font-weight: bold;
+    margin-right: 50px !important;
+}
+
+.mark-attendance {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.mark-attendance:hover {
+    background: #218838;
+}
+.add-student {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    background-color: white;
+    color: #162d44;
+    border: 1px #162d44 solid !important;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.button-container {
+    display: flex;
+    justify-content: center; 
+    gap: 5rem;
+    margin: 1rem 0 !important;
+}
+
+.add-student:hover {
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+}
+.download-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    background-color: white;
+    color: #162d44;
+    border: 1px #162d44 solid !important;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 3rem !important;
+    margin-bottom: 50px !important;
+}
+
+.download-btn:hover {
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+}

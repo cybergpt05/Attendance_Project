@@ -1,0 +1,13 @@
+.thumbnail{
+    width: 100%;
+    height: 500px;
+}
+@media screen and (max-width: 768px) {
+    .thumbnail {
+      width: 100%; 
+      height:auto;
+    }
+  }
+.description{
+    text-align: center;
+}

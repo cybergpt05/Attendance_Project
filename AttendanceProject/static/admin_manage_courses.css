@@ -1,0 +1,91 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    padding: 20px !important;
+    justify-content: center !important;
+    width: 28rem !important;
+    height: 370px;
+    margin-top: 100px !important;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center; 
+    height: 100vh; 
+    margin-top: 10px; 
+    padding-top: 0 !important;
+}
+.form-group {
+    display: block !important;
+    margin-bottom: 20px;
+}
+
+input[type="text"], .form-control {
+    width: 100%;
+    display: block;
+    margin-bottom: 10px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.vertical-stack {
+    display: block;
+    width: 100%;
+}
+
+.name, .author_id {
+    height: 2.5rem !important;
+    margin-bottom: 15px !important;
+}
+
+.name {
+    margin-bottom: 2rem !important;
+}
+
+.author_id {
+    margin-bottom: 5rem !important;
+}
+
+.label {
+    color: #4c5a73;
+    margin-bottom: 5px !important;
+}
+
+.add-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px #162d44 solid;
+    padding-bottom: 10px !important;
+    line-height: normal;
+    width: 130px !important;
+}
+
+.add-button:hover {
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+}
+
+@media screen and (max-width: 768px) {
+    .card {
+        display: flex;
+        flex-direction: column;
+        padding: 20px !important;
+        justify-content: center !important;
+        width: 20rem !important;
+        height: 370px;
+        margin-top: 100px !important;
+    }
+    .vertical-stack {
+        display: block;
+        width: 100%;
+    }
+}

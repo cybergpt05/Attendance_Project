@@ -1,0 +1,67 @@
+.card{
+    display: flex;
+    padding: 0px 20px !important;
+    justify-content: center !important;
+    margin-top: 150px;
+    width: 28rem !important;
+    height: 560px;
+}
+
+.container1{
+    display: flex;
+    justify-content: center !important;
+    padding-top: 0 !important;
+}
+.container2{
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: -40px !important;
+    padding-top: 15px !important;
+}
+#font{
+    padding-top: 0.5rem !important;
+}
+#label,.label{
+    padding-top: 1rem !important;
+    color: #4c5a73;
+}
+#email{
+    cursor: not-allowed;
+    height: 3rem !important;
+    background: #ced4da;
+    border: none !important;
+    border-radius: 6px !important;
+    margin-top: 0.5rem !important;
+    padding-left: 0.7rem !important;
+    font-size: 18px !important;
+    font-weight: 550 !important;
+    padding-bottom: 0.1rem !important;
+    margin-bottom: 10px !important;
+}
+.password{
+    height: 3rem !important;
+    border-radius: 6px !important;
+    margin-top: 0.5rem !important;
+    padding-left: 0.7rem !important;
+    font-size: 18px !important;
+    font-weight: 550 !important;
+    padding-bottom: 0.1rem !important;
+    margin-bottom: 10px !important;
+}
+.add-button{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px #162d44 solid;
+    padding-bottom: 10px !important;
+    line-height: normal;
+    width: 10rem !important;
+    margin-top: 35px !important;
+}
+.add-button:hover{
+    color: rgb(236,236,236);
+    background-color: #162d44;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px #162d44;
+    
+}
