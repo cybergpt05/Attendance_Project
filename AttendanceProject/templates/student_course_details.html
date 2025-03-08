@@ -1,0 +1,49 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='course_details.css')}}">
+<h2 class="name-label fw-bold">{{course_name}}</h2>
+<hr class="custom-hr">
+<div class="course-details">
+    <div class="students-section">
+        <h3>Attendances history</h3>
+        <input type="text" id="searchInput" placeholder="ابحث عن تاريخ" class="form-control mb-3" autocomplete="off">
+
+        <ul id="studentsList">
+            {% if attendances %}
+            {% for attendance in attendances %}
+            <li class="student-item" data-name="{{attendance.attend_time.strftime('%Y-%m-%d')}}" data-id="{{ attendance.attend_time.strftime('%I:%M:%S %p') }}">
+                <span class="student-id fw-bold">تاريخ الحضور:</span>
+                <span class="student-name fw-bold">{{attendance.attend_time.strftime('%Y-%m-%d')}}</span>
+                <span class="student-time-label fw-bold" style="margin-left: auto !important; color: #162d44; margin-right: 3rem !important;">وقت الحضور:</span>
+                <span class="student-time fw-bold" style="margin-left: auto !important; color: #162d44; margin-right: 3rem !important;">{{ attendance.attend_time.strftime('%I:%M:%S %p') }}</span>
+            </li>
+            {% endfor %}
+            <form method="POST" action="">
+                <center><button type="submit" name="form_type" value="download_history" class="download-btn">Download as .csv</button></center>
+            </form>
+            {% else %}
+            <center class="fw-bold" style="margin: auto !important; color: #162d44;">No attendances was recorded</center>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchQuery = this.value.toLowerCase();
+        const students = document.querySelectorAll('.student-item');
+
+        students.forEach(function(student) {
+            const studentName = student.getAttribute('data-name').toLowerCase();
+            const studentId = student.getAttribute('data-id').toLowerCase();
+
+            if (studentName.includes(searchQuery) || studentId.includes(searchQuery)) {
+                student.style.display = '';
+            } else {
+                student.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+{% endblock %}

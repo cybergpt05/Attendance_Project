@@ -1,0 +1,45 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='profile.css')}}">
+
+<div class="container container1">
+    <div class="card">
+        <div class="container-fluid container2">
+            <img src="{{ url_for('static', filename='pfp.png') }}" alt="Profile Picture" style="margin-bottom: 8px !important;" class="rounded-circle" width="90" height="90">
+        </div>
+        <font class="text-center fw-semibold" id="font">Hi, {{current_user.first_name}} {{current_user.last_name}}</font>
+        <label for="email" id="label" class="fw-semibold">Email</label>
+        <input type="text" id="email" value="{{current_user.email}}" readonly disabled>
+        <form action="" method="POST">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <div class="form-group">
+                    {{ form.current_password.label(class="form-control-label label fw-semibold")}}
+                    {% if form.current_password.errors %}
+                    {{ form.current_password(class="form-control form-control-sm is-invalid")}}
+                    <div class="invalid-feedback">
+                    {%for error in form.current_password.errors %}
+                    <span>{{error}}</span>
+                    {%endfor%}
+                    </div>
+                    {%else%}
+                    {{ form.current_password(class="form-control form-control-sm password")}}
+                    {%endif%}
+                </div>
+                <div class="form-group">
+                    {{ form.new_password.label(class="form-control-label label fw-semibold")}}
+                    {% if form.new_password.errors %}
+                    {{ form.new_password(class="form-control form-control-sm is-invalid")}}
+                    <div class="invalid-feedback">
+                    {%for error in form.new_password.errors %}
+                    <span>{{error}}</span>
+                    {%endfor%}
+                    </div>
+                    {%else%}
+                    {{ form.new_password(class="form-control form-control-sm password")}}
+                    {%endif%}
+                </div>
+                <center><div class="form-group">{{ form.submit(class="btn add-button fw-semibold")}}</div></center>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+<div class="container-fluid px-0" id="base-info" style="margin-top:68px;">
+<img src="{{url_for('static',filename='thumb.jpg')}}" class="thumbnail">
+<center>
+    <div class="container-fluid mt-3 mb-3">
+        <font class="fw-bold" style="color: #23476a;font-size:24px;">
+            JU Attendance System
+        </font><br><br>
+        <font style="color: #23476a;font-size:16px;text-align: center;margin-bottom: 20px;" class="description">
+            The University of Jordan's Smart Attendance System aligns with the university's vision of leveraging modern technologies to enhance academic operations and ensure efficiency in daily activities. This innovative system simplifies the attendance process by utilizing QR codes and real-time tracking, making it seamless for both students and faculty members. It fosters accuracy, eliminates manual errors, and promotes a technology-driven academic environment. By integrating this system into classroom activities, the university takes a step toward building a smarter campus, ensuring that attendance tracking becomes an integral and effortless part of teaching and learning practices.
+        </font><br><br>
+    </div>
+</center>
+
+
+</div>
+{% endblock %}

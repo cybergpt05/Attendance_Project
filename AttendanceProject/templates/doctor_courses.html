@@ -1,0 +1,33 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='doctor_courses.css') }}">
+<div class="container">
+    {% if courses %}
+        {% for course in courses %}
+            <div class="card shadow">
+                <fieldset class="form-group">
+                    <div class="form-group vertical-stack">
+                        {{ form.name.label(class="form-control-label label fw-semibold") }}
+                        {{ form.name(class="form-control form-control-sm name", value=course.split(';')[1], readonly=True) }}
+                    </div>
+                    <div class="form-group vertical-stack">
+                        {{ form.enrolled_number.label(class="form-control-label label fw-semibold") }}
+                        {% set enrolled_list = course.split(';')[2] %}
+                        {% set enrolled_students = enrolled_list.split(',') if enrolled_list else [] %}
+                        {{ form.enrolled_number(class="form-control form-control-sm enrolled_number", value=enrolled_students|length, readonly=True) }}
+                    </div>
+                    <center>
+                        <div class="form-group">
+                            <a href="{{ url_for('course_details', course_id=course.split(';')[0]) }}" class="btn course-button fw-bold">
+                                See Course
+                            </a>
+                        </div>
+                    </center>
+                </fieldset>
+            </div>
+        {% endfor %}
+    {% else %}
+    <center style="margin-top: auto;margin-bottom: auto;color: #162d44;font-size: 1.8rem !important;" class="fw-bold">No courses Yet!</center>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='course_attendance.css') }}">
+
+<h2 class="name-label fw-bold" style="margin-top: 5rem !important; margin-left: 2rem !important;">{{ course.course_name }} - سجل الحضور</h2>
+<hr class="custom-hr">
+
+<form method="POST">
+    <select id="studentDropdown" name="student_id" class="student-dropdown">
+        <option value="all">عرض الجميع</option>
+        {% for student in students %}
+        <option value="{{ student.id }}">{{ student.first_name }} {{ student.last_name }} - {{ student.uni_number }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn download-btn">تحميل الحضور كـ CSV</button>
+</form>
+<hr class="custom-hr">
+<table id="attendanceTable">
+    <thead>
+        <tr>
+            <th>اسم الطالب</th>
+            <th>الرقم الجامعي</th>
+            <th>التاريخ والوقت</th>
+        </tr>
+    </thead>
+    <tbody id="attendanceBody">
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const attendanceData = {{ attendance_data | tojson }};
+        const studentDropdown = document.getElementById("studentDropdown");
+        const attendanceBody = document.getElementById("attendanceBody");
+
+        function updateResults() {
+            const selectedStudent = studentDropdown.value;
+            const filteredData = attendanceData.filter(record => 
+                selectedStudent === "all" || record.student_id == selectedStudent
+            );
+
+            attendanceBody.innerHTML = "";
+            if (filteredData.length > 0) {
+                filteredData.forEach(record => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${record.student_name}</td>
+                        <td>${record.uni_number}</td>
+                        <td>${record.date}</td>
+                    `;
+                    attendanceBody.appendChild(row);
+                });
+            } else {
+                attendanceBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:red; padding-top: 3rem !important; font-weight:bold">لا يوجد بيانات</td></tr>`;
+            }
+        }
+
+        studentDropdown.addEventListener("change", updateResults);
+        updateResults();
+    });
+</script>
+
+{% endblock %}
