@@ -33,6 +33,19 @@
                 {%endif%}
             </div>
             <div class="form-group">
+                {{ form.uni_number.label(class="form-control-label label fw-semibold")}}
+                {% if form.uni_number.errors %}
+                {{ form.uni_number(class="form-control form-control-sm is-invalid")}}
+                <div class="invalid-feedback">
+                {%for error in form.uni_number.errors %}
+                <span>{{error}}</span>
+                {%endfor%}
+                </div>
+                {%else%}
+                {{ form.uni_number(class="form-control form-control-sm name")}}
+                {%endif%}
+            </div>
+            <div class="form-group">
                 {{ form.email.label(class="form-control-label label fw-semibold")}}
                 {% if form.email.errors %}
                 {{ form.email(class="form-control form-control-sm is-invalid")}}
