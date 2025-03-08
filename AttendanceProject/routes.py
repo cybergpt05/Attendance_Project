@@ -120,7 +120,7 @@ def add_user():
         flash('User added successfully!','info')
     return render_template('add_user.html',title='Add User',form=form)
 
-@app.route('/doctor/course/<int:course_id>')
+@app.route('/doctor/course/<int:course_id>',methods=["GET","POST"])
 @login_required
 def course_details(course_id):
     course = Course.query.get_or_404(course_id)
@@ -140,7 +140,7 @@ def course_details(course_id):
                 student_statuses[student.id] = 'غائب'
     return render_template('course_details.html', course=course, students=enrolled_students,student_statuses=student_statuses)
 
-@app.route("/scan_qr/<int:course_id>")
+@app.route("/scan_qr/<int:course_id>",methods=["GET","POST"])
 @login_required
 def scan_qr_attendance(course_id):
     token = request.args.get("token")
