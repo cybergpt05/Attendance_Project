@@ -3,17 +3,17 @@
     flex-direction: column;
     padding: 20px !important;
     justify-content: center !important;
-    margin-top: 200px;
+    margin-top: 270px;
     width: 35rem !important;
-    height: 600px;
+    height: 700px;
 }
 
 .container {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center; /* Add this to center content horizontally */
-    height: 100vh; /* Full viewport height */
+    align-items: center; 
+    height: 100vh;
     padding-top: 0 !important;
 }
 
@@ -76,8 +76,8 @@ button {
         display: flex;
         justify-content: center;
         padding: 20px !important;
-        margin-top: 260px;
+        margin-top: 350px;
         width: 20rem !important;
-        height: 610px;
+        height: 710px;
     }
 }
