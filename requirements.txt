@@ -11,3 +11,4 @@ WTForms
 email_validator
 gunicorn
 Pillow
+psycopg2
