@@ -9,10 +9,7 @@ from AttendanceProject.forms import StudentCoursesForm,ChangePasswordForm,Doctor
 from werkzeug.exceptions import NotFound
 from datetime import datetime
 import os,qrcode,time,secrets,pytz,csv,io
-import numpy as np
-from pyzbar.pyzbar import decode
-from PIL import Image
-import io
+
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
     token = secrets.token_urlsafe(16)
@@ -370,23 +367,6 @@ def course_attendance(course_id):
 
     return render_template("course_attendance.html", course=course, students=students, attendance_data=attendance_data)
 
-
-@app.route('/scan_qr_cam', methods=['POST'])
-def scan_qr():
-    # استقبال الصورة من الكاميرا
-    file = request.files['file']
-    image = Image.open(file)
-    
-    # تحويل الصورة إلى تنسيق مناسب لمعالجة pyzbar
-    image = np.array(image)
-    decoded_objects = decode(image)
-    
-    if decoded_objects:
-        # الحصول على النص من كود QR
-        qr_text = decoded_objects[0].data.decode('utf-8')
-        return jsonify({"status": "success", "message": "تم مسح كود QR بنجاح!", "qr_link": qr_text})
-    else:
-        return jsonify({"status": "error", "message": "لم يتم العثور على كود QR في الصورة!"})
 @app.route('/quickscan')
 def index():
     return render_template('index.html')
