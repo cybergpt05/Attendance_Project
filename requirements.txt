@@ -10,3 +10,4 @@ Flask-Migrate
 WTForms
 email_validator
 gunicorn
+Pillow
