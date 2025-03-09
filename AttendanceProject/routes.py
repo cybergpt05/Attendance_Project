@@ -15,18 +15,26 @@ def generate_qr(course_id):
     token = secrets.token_urlsafe(16)
     expiration_time = time.time() + 300
     existing_token = QRToken.query.filter_by(course_id=course_id).first()
+    
     if existing_token:
         existing_token.token = token
         existing_token.expiration_time = expiration_time
+        db.session.commit()
     else:
-        db.session.add(QRToken(course_id=course_id, token=token, expiration_time=expiration_time))
-    db.session.commit()
+        new_token = QRToken(course_id=course_id, token=token, expiration_time=expiration_time)
+        db.session.add(new_token)
+        db.session.commit()
+    
     attendance_url = url_for('scan_qr_attendance', course_id=course_id, token=token, _external=True)
     qr = qrcode.make(attendance_url)
-    static_folder = os.path.join(os.getcwd(), "static", "qr_codes")
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))  
+    static_folder = os.path.join(base_dir, "AttendanceProject", "static", "qr_codes")
     os.makedirs(static_folder, exist_ok=True)
+    
     qr_path = os.path.join(static_folder, f"course_{course_id}.png")
     qr.save(qr_path)
+    
     return token
 
 @app.route("/")
