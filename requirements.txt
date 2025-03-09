@@ -14,4 +14,3 @@ Pillow
 psycopg2
 pyzbar
 numpy
-PIL
