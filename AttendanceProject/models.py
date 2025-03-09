@@ -8,11 +8,11 @@ def load_user(user_id):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     account_type = db.Column(db.String(16), nullable=False)
-    first_name = db.Column(db.String(16), nullable=False)
+    first_name = db.Column(db.String(64), nullable=False)
     uni_number = db.Column(db.String(20), nullable=True)
-    last_name = db.Column(db.String(16), nullable=False)
+    last_name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(60), nullable=False)
+    password = db.Column(db.String(256), nullable=False)
     courses = db.relationship('Course', backref='doctor', lazy=True)
     attendances = db.relationship('Attendance', backref='student', lazy=True)
     def __repr__(self):
@@ -20,7 +20,7 @@ class User(db.Model, UserMixin):
 
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    course_name = db.Column(db.String(100), nullable=False)
+    course_name = db.Column(db.String(128), nullable=False)
     doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     # Students enrolled in this course (many-to-many)
     enrolled_students = db.relationship('User', 
@@ -46,7 +46,7 @@ class Attendance(db.Model):
 class QRToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
-    token = db.Column(db.String(64), nullable=False, unique=True)
+    token = db.Column(db.String(128), nullable=False, unique=True)
     expiration_time = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
