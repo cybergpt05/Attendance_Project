@@ -9,3 +9,4 @@ qrcode
 Flask-Migrate
 WTForms
 email_validator
+gunicorn
