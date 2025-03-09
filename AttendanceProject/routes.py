@@ -42,7 +42,7 @@ def home():
     password = generate_password_hash('$Ju005Admin#juedujo')
     user = User(account_type='admin',email="juadmin@juadmin.edu.jo",password=password,first_name="Admin",last_name="Account",uni_number="0505888")
     db.session.add(user)
-    db,session.commit()
+    db.session.commit()
     return render_template("home.html",title="Home Page")
 
 @app.route('/login',methods=["GET","POST"])
