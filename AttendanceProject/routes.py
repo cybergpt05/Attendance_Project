@@ -18,14 +18,14 @@ def generate_qr(course_id):
     if existing_token:
         existing_token.token = token
         existing_token.expiration_time = expiration_time
-        db.session.commit()
     else:
-        new_token = QRToken(course_id=course_id, token=token, expiration_time=expiration_time)
-        db.session.add(new_token)
-        db.session.commit()
+        db.session.add(QRToken(course_id=course_id, token=token, expiration_time=expiration_time))
+    db.session.commit()
     attendance_url = url_for('scan_qr_attendance', course_id=course_id, token=token, _external=True)
     qr = qrcode.make(attendance_url)
-    qr_path = f"static/qr_codes/course_{course_id}.png"
+    static_folder = os.path.join(os.getcwd(), "static", "qr_codes")
+    os.makedirs(static_folder, exist_ok=True)
+    qr_path = os.path.join(static_folder, f"course_{course_id}.png")
     qr.save(qr_path)
     return token
 
