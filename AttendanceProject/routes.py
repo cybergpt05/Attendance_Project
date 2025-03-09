@@ -39,6 +39,8 @@ def generate_qr(course_id):
 @app.route("/")
 @app.route("/home",methods=["GET"])
 def home():
+    db.create_all()
+    print(os.getenv('DATABASE_URL'))
     return render_template("home.html",title="Home Page")
 
 @app.route('/login',methods=["GET","POST"])
