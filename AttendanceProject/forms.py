@@ -12,7 +12,7 @@ class AddCourseForm(FlaskForm):
 class AddUserForm(FlaskForm):
     first_name = StringField('First Name',validators=[DataRequired()])
     last_name = StringField('Last Name',validators=[DataRequired()])
-    uni_number = StringField('University Number',validators=[DataRequired()])
+    uni_number = StringField('University Number')
     email = StringField('Email',validators=[DataRequired(),Email()])
     password = StringField('Password',validators=[DataRequired()])
     account_type = StringField('Account Type',validators=[DataRequired()])
