@@ -22,11 +22,13 @@
                     {% if student_statuses[student.id] == 'حاضر' %} حاضر {% else %} غائب {% endif %}
                 </span>
                 {% if student_statuses[student.id] == 'غائب' %}
+                <span>
                 <button class="mark-attendance-btn btn btn-success" 
                         data-student-id="{{student.id}}" 
                         data-course-id="{{course.id}}">
-                    تسجيل الحضور يدويًا
+                    تسجيل الحضور 
                 </button>
+                
                 {% else %}
                 <button disabled class="mark-attendance-btn btn btn-success" 
                         data-student-id="{{student.id}}" 
@@ -34,6 +36,12 @@
                         ✔ تم تسجيل الحضور
                 </button>
                 {% endif %}
+                <button class="mark-absent-btn btn btn-danger" 
+                        data-student-id="{{student.id}}" 
+                        data-course-id="{{course.id}}">
+                    تسجيل الغياب 
+                </button>
+            </span>
             </li>
             {% endfor %}
             {% else %}
