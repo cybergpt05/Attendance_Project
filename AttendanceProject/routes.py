@@ -30,6 +30,8 @@ def generate_qr(course_id):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))  
     static_folder = os.path.join(base_dir, "AttendanceProject", "static", "qr_codes")
+    print(os.path.join(base_dir, "AttendanceProject", "static", "qr_codes"))
+    print('\n\n\n')
     os.makedirs(static_folder, exist_ok=True)
     
     qr_path = os.path.join(static_folder, f"course_{course_id}.png")
