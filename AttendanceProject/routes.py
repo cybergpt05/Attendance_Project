@@ -39,7 +39,7 @@ def generate_qr(course_id):
 @app.route("/")
 @app.route("/home",methods=["GET"])
 def home():
-    password = generate_password_hash('$Ju005Admin#juedujo')
+    password = generate_password_hash('$Ju005Admin#juedujo', method='pbkdf2:sha256')
     user = User(account_type='admin',email="juadmin@juadmin.edu.jo",password=password,first_name="Admin",last_name="Account",uni_number="0505888")
     db.session.add(user)
     db.session.commit()
@@ -82,7 +82,7 @@ def profile():
         current_password = form.current_password.data
         new_password = form.new_password.data
         if check_password_hash(user.password,current_password):
-            user.password = generate_password_hash(new_password)
+            user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
             db.session.commit()
             flash('Password was changed successfully!','success')
         else:
