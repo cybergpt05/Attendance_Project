@@ -3,58 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مسح كود QR باستخدام بايثون</title>
+    <title>QR Code Scanner</title>
 </head>
 <body>
-    <h1>مسح كود QR باستخدام بايثون</h1>
-
-    <h2>استخدام الكاميرا لقراءة كود QR</h2>
-    <button onclick="startCamera()">افتح الكاميرا</button>
-    <video id="video" width="400" height="300" autoplay></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <button onclick="captureImage()">التقاط الصورة</button>
+    <h1>مسح كود QR</h1>
+    <div id="qr-reader" style="width: 500px; height: 500px;"></div>
+    <button id="start-scan">ابدأ المسح</button>
 
     <script>
-        function startCamera() {
-            const video = document.getElementById('video');
-            const constraints = { video: { facingMode: 'environment' } };
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    video.srcObject = stream;
-                })
-                .catch(err => {
-                    console.error("خطأ في الوصول إلى الكاميرا:", err);
-                });
+        // إعداد الكاميرا لقراءة كود الـ QR
+        function onScanSuccess(decodedText, decodedResult) {
+            // سيتم تنفيذ هذه الوظيفة عند نجاح المسح
+            alert("تم مسح الكود: " + decodedText);
+            window.location.href = decodedText; // إعادة توجيه المستخدم للرابط الموجود في الكود
         }
 
-        function captureImage() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append('file', blob, 'image.png');
-                
-                fetch('/scan_qr_cam', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert("تم مسح كود QR بنجاح! الرابط: " + data.qr_link);
-                        window.location.href = data.qr_link;
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => console.error("خطأ في الاتصال بالخادم:", error));
-            });
+        function onScanError(errorMessage) {
+            // سيتم تنفيذ هذه الوظيفة عند حدوث خطأ في المسح
+            console.error(errorMessage);
         }
+
+        // البدء في مسح الكود عند الضغط على الزر
+        document.getElementById("start-scan").addEventListener("click", function() {
+            const qrCodeScanner = new Html5Qrcode("qr-reader");
+
+            qrCodeScanner.start(
+                { facingMode: "environment" }, // استخدام الكاميرا الخلفية
+                {
+                    fps: 10,    // عدد الإطارات في الثانية
+                    qrbox: 250  // حجم مربع المسح
+                },
+                onScanSuccess,
+                onScanError
+            );
+        });
     </script>
 </body>
 </html>
