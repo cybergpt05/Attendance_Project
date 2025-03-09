@@ -366,7 +366,3 @@ def course_attendance(course_id):
         return response
 
     return render_template("course_attendance.html", course=course, students=students, attendance_data=attendance_data)
-
-@app.route('/quickscan')
-def index():
-    return render_template('index.html')
