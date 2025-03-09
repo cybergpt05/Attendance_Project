@@ -67,5 +67,13 @@
         });
     });
 </script>
+<script>
+    setInterval(function() {
+    let userResponse = confirm("انتهت صلاحية الـqr code , هل تريد اظهار كود اخر؟");
+    if (userResponse) {
+        location.reload();
+    }
+}, 300000);
 
+</script>
 {% endblock %}
