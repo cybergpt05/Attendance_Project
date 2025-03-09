@@ -12,3 +12,6 @@ email_validator
 gunicorn
 Pillow
 psycopg2
+pyzbar
+numpy
+PIL
