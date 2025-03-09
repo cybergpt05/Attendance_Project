@@ -30,7 +30,7 @@ def generate_qr(course_id):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))  
     static_folder = os.path.join(base_dir, "AttendanceProject", "static", "qr_codes")
-    print(os.listdir("AttendanceProject")
+    print(os.listdir("AttendanceProject"))
     print('\n\n\n')
     print(os.listdir("static"))
     print("\n\n\n")
