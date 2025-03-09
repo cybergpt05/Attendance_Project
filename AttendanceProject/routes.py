@@ -181,7 +181,8 @@ def mark_attendance():
     data = request.get_json()
     student_id = data.get("student_id")
     course_id = data.get("course_id")
-
+    if current_user.id != Course.query.filter_by(id=course_id).first().doctor_id:
+        abort(403)
     if not student_id or not course_id:
         return jsonify({"success": False, "message": "بيانات غير صحيحة"}), 400
 
@@ -196,6 +197,25 @@ def mark_attendance():
     db.session.commit()
 
     return jsonify({"success": True, "message": "تم تسجيل الحضور بنجاح!"})
+
+@app.route("/mark_absent", methods=["POST"])
+@login_required
+def mark_absent():
+    data = request.get_json()
+    student_id = data.get("student_id")
+    course_id = data.get("course_id")
+    if current_user.id != Course.query.filter_by(id=course_id).first().doctor_id:
+        abort(403)
+    if not student_id or not course_id:
+        return jsonify({"success": False, "message": "بيانات غير صحيحة"}), 400
+
+    attendance = Attendance.query.filter_by(student_id=student_id, course_id=course_id).first()
+
+    if attendance:
+        db.session.delete(attendance)
+        db.session.commit()
+
+    return jsonify({"success": True, "message": "تم تسجيل الغياب بنجاح!"})
 
 @app.route('/doctor/add_student/<int:course_id>', methods=["GET", "POST"])
 @login_required
