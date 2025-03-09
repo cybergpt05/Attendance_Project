@@ -29,14 +29,8 @@ def generate_qr(course_id):
     qr = qrcode.make(attendance_url)
 
     base_dir = os.path.dirname(os.path.abspath(__file__))  
-    static_folder = os.path.join(base_dir, "AttendanceProject", "static", "qr_codes")
+    static_folder = os.path.join(base_dir, "static", "qr_codes")
     os.makedirs(static_folder, exist_ok=True)
-    with open(static_folder+'file.txt','a') as file:
-        file.write('1234567890')
-    with open(static_folder+'file.txt','r') as file:
-        content = file.read()
-        print(content)
-        print('\n\n\n')
     qr_path = os.path.join(static_folder, f"course_{course_id}.png")
     qr.save(qr_path)
     
