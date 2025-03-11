@@ -1,0 +1,27 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='add_course.css')}}">
+<div class="container">
+    <form action="" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="card shadow">
+            <fieldset class="form-group">
+            <div class="form-group">
+                {{ form.course_name.label(class="form-control-label label fw-semibold")}}
+                {% if form.course_name.errors %}
+                {{ form.course_name(class="form-control form-control-sm is-invalid")}}
+                <div class="invalid-feedback">
+                {%for error in form.course_name.errors %}
+                <span>{{error}}</span>
+                {%endfor%}
+                </div>
+                {%else%}
+                {{ form.course_name(class="form-control form-control-sm name")}}
+                {%endif%}
+            </div>
+                <center><div class="form-group">{{ form.submit(class="btn add-button fw-semibold")}}</div></center>
+            </fieldset>
+            </form>
+        </div>
+    </div>
+{% endblock %}
