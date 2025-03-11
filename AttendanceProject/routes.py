@@ -180,23 +180,25 @@ def generate_qr_api(course_id):
 
 
 @app.route("/scan_qr/<int:course_id>",methods=["GET","POST"])
-@login_required
 def scan_qr_attendance(course_id):
     token = request.args.get("token")
-    enrollments = Course.query.filter_by(id=course_id).first().enrolled_students
-    user = User.query.filter_by(id=current_user.id).first()
-
-    if enrollments:
-        if user not in enrollments:
-            abort(403)
-    if token:
-        qr_token = QRToken.query.filter_by(token=token, course_id=course_id).first()
-        if not qr_token or time.time() > qr_token.expiration_time:
-            flash('Invalid QR Code format or the code has been expired!','danger')
+    course = Course.query.filter_by(id=course_id).first()
+    user = current_user
+    if course:
+        enrollments = course.enrolled_students
+        if enrollments:
+            if user not in enrollments:
+                abort(403)
+        if token:
+            qr_token = QRToken.query.filter_by(token=token, course_id=course_id).first()
+            if not qr_token or time.time() > qr_token.expiration_time:
+                flash('Invalid QR Code format or the code has been expired!','danger')
+                return redirect(url_for('home'))
+        else:
+            flash('Token missing!','danger')
             return redirect(url_for('home'))
     else:
-        flash('Token missing!','danger')
-        return redirect(url_for('home'))
+        return abort(403)
     attendance = Attendance.query.filter_by(student_id=user.id, course_id=course_id).first()
     if attendance:
         attendance.attend_time = datetime.now(jordan_tz)
