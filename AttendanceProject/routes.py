@@ -291,6 +291,13 @@ def manage_courses():
         doctor_name = form.author_id.data.split()
         doctor_id = User.query.filter_by(first_name=doctor_name[0],last_name=doctor_name[1]).first()
         course = Course.query.filter_by(course_name=course_name,doctor_id=doctor_id.id).first()
+        course_qr_token = QRToken.query.filter_by(course_id=course.id).first()
+        if course_qr_token:
+            db.session.delete(course_qr_token)
+        course_attendances = Attendance.query.filter_by(course_id=course.id).all()
+        if course_attendances:
+            for attend in course_attendances:
+                db.session.delete(attend)
         db.session.delete(course)
         db.session.commit()
         return redirect(url_for('manage_courses'))
