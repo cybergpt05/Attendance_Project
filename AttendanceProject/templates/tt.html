@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>التقاط صورة باستخدام الكاميرا</title>
+  <title>التقاط صورة باستخدام الكاميرا وقراءة QR Code</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,7 +36,7 @@
 </head>
 <body>
 
-  <h1>التقاط صورة باستخدام الكاميرا</h1>
+  <h1>التقاط صورة باستخدام الكاميرا وقراءة QR Code</h1>
   <video id="videoElement" autoplay></video>
   <button id="captureButton">التقاط الصورة</button>
 
@@ -44,6 +44,8 @@
     <h3>الصورة الملتقطة:</h3>
     <img id="capturedImage" src="" alt="الصورة الملتقطة">
   </div>
+
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 
   <script>
     // الوصول إلى كاميرا المستخدم
@@ -74,8 +76,19 @@
       const dataUrl = canvas.toDataURL('image/png');
       capturedImage.src = dataUrl;
 
-      // يمكنك هنا إضافة الكود لرفع الصورة إلى الخادم
-      // إرسال البيانات إلى الخادم باستخدام AJAX أو Fetch API
+      // استخراج QR Code من الصورة
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+
+      if (qrCode) {
+        // إذا تم العثور على رابط في QR Code
+        const url = qrCode.data;
+        console.log("تم استخراج الرابط: ", url);
+        // فتح الرابط تلقائيًا
+        window.location.href = url;
+      } else {
+        alert("لم يتم العثور على QR Code في الصورة.");
+      }
     });
   </script>
 
