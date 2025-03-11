@@ -186,13 +186,12 @@ def scan_qr_attendance(course_id):
     course = Course.query.filter_by(id=course_id).first()
     user = User.query.filter_by(id=current_user.id).first()
     if course:
-        print('course_found\n\n')
         enrollments = course.enrolled_students
         if enrollments:
-            print('found enrollments \n\n')
             if user not in enrollments:
-                print('didnt found user\n\n')
-                return abort(403)
+                abort(403)
+        else:
+            return abort(403)
         if token:
             qr_token = QRToken.query.filter_by(token=token, course_id=course_id).first()
             if not qr_token or time.time() > qr_token.expiration_time:
