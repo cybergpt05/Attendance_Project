@@ -16,7 +16,7 @@
 }
 
 .qr-section img {
-    max-width: 200px;
+    max-width: 400px;
     height: auto;
 }
 
@@ -96,6 +96,22 @@
     background-color: #162d44;
     text-decoration: none !important;
     box-shadow: 1px 3px 8px #162d44;
+}
+.remove-student {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px red solid;
+    padding-bottom: 10px !important;
+    line-height: normal;
+    width: 180px !important;
+}
+
+.remove-student:hover {
+    color: rgb(236,236,236);
+    background-color: red;
+    text-decoration: none !important;
+    box-shadow: 1px 3px 8px red;
 }
 .download-btn {
     display: inline-block;
