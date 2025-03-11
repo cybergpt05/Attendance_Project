@@ -61,3 +61,6 @@ fieldset{
         height: 370px;
     }
 }
+#togglePassword {
+    cursor: pointer !important;
+}
