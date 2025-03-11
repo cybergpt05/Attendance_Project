@@ -43,3 +43,9 @@ class ChangePasswordForm(FlaskForm):
 class StudentCoursesForm(FlaskForm):
     name = StringField('Course Name',validators=[DataRequired()])
     submit = SubmitField('See Course')
+class DoctorAddCourseForm(FlaskForm):
+    course_name = StringField('Course Name',validators=[DataRequired()])
+    submit = SubmitField('Add Course')
+class DoctorRemoveStudent(FlaskForm):
+    student_id= StringField('University Number',validators=[DataRequired()])
+    submit = SubmitField('Remove Student')
