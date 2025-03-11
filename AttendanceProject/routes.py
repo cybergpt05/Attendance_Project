@@ -98,7 +98,7 @@ def add_course():
             course_name = form.name.data
             doc_name = form.author_id.data.split()
             doctor = User.query.filter_by(first_name=doc_name[0],last_name=doc_name[1]).first_or_404()
-            new_course = Course(course_name=course_name,doctor_id=doctor.id)
+            new_course = Course(course_name=course_name + f' - {form.author_id.data}',doctor_id=doctor.id)
             db.session.add(new_course)
             db.session.commit()
             flash(f'{course_name} Course was added successfully to dr.{doctor.first_name} {doctor.last_name} courses list.','success')
@@ -120,6 +120,10 @@ def add_user():
         email = form.email.data
         password = form.password.data
         account_type = form.account_type.data
+        old_user = User.query.filter_by(email=email).first()
+        if old_user:
+            flash('There exists a user with this email!','danger')
+            return redirect(url_for('add_user'))
         hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
         newUser = User(first_name=first_name,last_name=last_name,email=email,password=hashed_password,account_type=account_type,uni_number=uni_number)
         db.session.add(newUser)
