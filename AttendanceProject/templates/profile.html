@@ -7,7 +7,7 @@
         <div class="container-fluid container2">
             <img src="{{ url_for('static', filename='pfp.png') }}" alt="Profile Picture" style="margin-bottom: 8px !important;" class="rounded-circle" width="90" height="90">
         </div>
-        <font class="text-center fw-semibold" id="font">Hi, {{current_user.first_name}} {{current_user.last_name}}</font>
+        <font class="text-center fw-semibold" id="font">Hi, {{current_user.first_name}} {{current_user.last_name}} ({{current_user.uni_number if current_user.uni_number}})</font>
         <label for="email" id="label" class="fw-semibold">Email</label>
         <input type="text" id="email" value="{{current_user.email}}" readonly disabled>
         <form action="" method="POST">
