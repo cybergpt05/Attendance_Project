@@ -50,14 +50,14 @@
         </ul>
         <center>
             <div class="button-container">
-                <a href="{{url_for('add_student', course_id=course.id)}}" class="add-student btn btn-info">Add Student</a>
-                <a href="{{url_for('course_attendance', course_id=course.id)}}" class="add-student btn btn-info">See Attendance</a>
+                <a href="{{url_for('add_student', course_id=course.id)}}" class="add-student btn">Add Student</a>
+                <a href="{{url_for('remove_student', course_id=course.id)}}" class="remove-student btn fw-bold">Remove Student</a>
+                <a href="{{url_for('course_attendance', course_id=course.id)}}" class="add-student btn">See Attendance</a>
             </div>
         </center>        
     </div>
 </div>
 <script src="{{url_for('static',filename='script.js')}}"></script>
-
 <script>
     document.getElementById('searchInput').addEventListener('input', function() {
         const searchQuery = this.value.toLowerCase();
@@ -76,12 +76,55 @@
     });
 </script>
 <script>
-    setInterval(function() {
-    let userResponse = confirm("انتهت صلاحية الـqr code , هل تريد اظهار كود اخر؟");
-    if (userResponse) {
-        location.reload();
+    function updateAttendanceStatus() {
+        const courseId = "{{ course.id }}";
+        fetch(`/doctor/course/check_attendance/${courseId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("فشل في جلب بيانات الحضور");
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.querySelectorAll('.attendance-status').forEach(function(statusElement) {
+                let studentId = statusElement.id.replace('attendance-status-', '');
+                
+                if (data.hasOwnProperty(studentId)) {
+                    statusElement.textContent = data[studentId];
+                    statusElement.style.color = (data[studentId] === 'حاضر') ? 'green' : 'red';
+                }
+            });
+        })
+        .catch(error => {
+            console.error("حدث خطأ أثناء تحديث الحضور:", error);
+        });
     }
-}, 300000);
-
+    setInterval(updateAttendanceStatus, 4000);
 </script>
+<script>
+    function updateQRCode() {
+        const courseId = "{{ course.id }}";
+        fetch(`/doctor/course/generate_qr/${courseId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("فشل في تحديث الـ QR Code");
+            }
+            return response.json();
+        })
+        .then(data => {
+            const qrImage = document.querySelector('.qr-section img');
+            qrImage.src = data.qr_url + "?t=" + new Date().getTime();
+        })
+        .catch(error => {
+            console.error("خطأ أثناء تحديث QR Code:", error);
+        });
+    }
+    setInterval(updateQRCode, 20000);
+</script>
+
 {% endblock %}
