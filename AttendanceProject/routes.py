@@ -40,6 +40,10 @@ def generate_qr(course_id):
 @app.route("/home",methods=["GET"])
 def home():
     return render_template("home.html",title="Home Page")
+@app.route("/")
+@app.route("/tt",methods=["GET","POST"])
+def tt():
+    return render_template("tt.html",title="Home Page")
 
 @app.route('/login',methods=["GET","POST"])
 def login():
