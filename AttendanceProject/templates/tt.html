@@ -25,7 +25,7 @@
     #captureButton:hover {
       background-color: #45a049;
     }
-    #openCameraButton {
+    #zoomInButton, #zoomOutButton {
       padding: 10px 20px;
       margin-top: 20px;
       background-color: #2196F3;
@@ -33,7 +33,7 @@
       border: none;
       cursor: pointer;
     }
-    #openCameraButton:hover {
+    #zoomInButton:hover, #zoomOutButton:hover {
       background-color: #0b7dda;
     }
     #imageContainer {
@@ -48,8 +48,9 @@
 <body>
 
   <h1>التقاط صورة باستخدام الكاميرا وقراءة QR Code</h1>
-  <button id="openCameraButton">فتح الكاميرا</button>
   <video id="videoElement" autoplay></video>
+  <button id="zoomInButton">تكبير</button>
+  <button id="zoomOutButton">تصغير</button>
   <button id="captureButton">التقاط الصورة</button>
 
   <div id="imageContainer">
@@ -63,27 +64,37 @@
     const videoElement = document.getElementById('videoElement');
     const captureButton = document.getElementById('captureButton');
     const capturedImage = document.getElementById('capturedImage');
-    const openCameraButton = document.getElementById('openCameraButton');
+    const zoomInButton = document.getElementById('zoomInButton');
+    const zoomOutButton = document.getElementById('zoomOutButton');
 
     let currentStream;
+    let currentZoom = 1;
 
-    // وظيفة لفتح الكاميرا
-    openCameraButton.addEventListener('click', () => {
-      navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment', 
-          zoom: true // السماح بالزوم
-        }
-      })
+    // الوصول إلى كاميرا المستخدم
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
-        // عرض الفيديو على الصفحة
         currentStream = stream;
         videoElement.srcObject = stream;
       })
       .catch(err => {
-        console.error("فشل في فتح الكاميرا: ", err);
+        console.error("فشل في الوصول إلى الكاميرا: ", err);
         alert("فشل في الوصول إلى الكاميرا.");
       });
+
+    // تكبير الكاميرا
+    zoomInButton.addEventListener('click', () => {
+      if (currentZoom < 3) { // الحد الأقصى للزوم
+        currentZoom += 0.1;
+        videoElement.style.transform = `scale(${currentZoom})`;
+      }
+    });
+
+    // تصغير الكاميرا
+    zoomOutButton.addEventListener('click', () => {
+      if (currentZoom > 1) { // الحد الأدنى للزوم
+        currentZoom -= 0.1;
+        videoElement.style.transform = `scale(${currentZoom})`;
+      }
     });
 
     // التقاط الصورة عند الضغط على الزر
