@@ -32,11 +32,30 @@
                 {%endfor%}
                 </div>
                 {%else%}
-                {{ form.password(class="form-control form-control-sm password")}}
+                <div class="position-relative">
+                    {{ form.password(class="form-control form-control-sm password pe-4") }}
+                    <i class="bi bi-eye position-absolute end-0 top-50 translate-middle-y me-2 cursor-pointer" id="togglePassword"></i>
+                </div>
+                
                 {%endif%}
                 <center><div class="form-group">{{ form.submit(class="btn login-button fw-semibold")}}</div></center>
             </fieldset>
             </form>
         </div>
     </div>
+
+<script>
+    document.getElementById("togglePassword").addEventListener("click", function () {
+    let passwordInput = document.querySelector(".password");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        this.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+        passwordInput.type = "password";
+        this.classList.replace("bi-eye-slash", "bi-eye");
+    }
+});
+
+</script>
 {% endblock %}
