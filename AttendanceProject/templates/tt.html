@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التقاط صورة باستخدام الكاميرا</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #videoElement {
+      width: 100%;
+      max-width: 500px;
+      border: 2px solid #000;
+    }
+    #captureButton {
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #captureButton:hover {
+      background-color: #45a049;
+    }
+    #imageContainer {
+      margin-top: 20px;
+    }
+    #capturedImage {
+      max-width: 100%;
+      max-height: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>التقاط صورة باستخدام الكاميرا</h1>
+  <video id="videoElement" autoplay></video>
+  <button id="captureButton">التقاط الصورة</button>
+
+  <div id="imageContainer">
+    <h3>الصورة الملتقطة:</h3>
+    <img id="capturedImage" src="" alt="الصورة الملتقطة">
+  </div>
+
+  <script>
+    // الوصول إلى كاميرا المستخدم
+    const videoElement = document.getElementById('videoElement');
+    const captureButton = document.getElementById('captureButton');
+    const capturedImage = document.getElementById('capturedImage');
+
+    // اطلب إذن الوصول إلى الكاميرا
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        // عرض الفيديو على الصفحة
+        videoElement.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("حدث خطأ في الوصول إلى الكاميرا: ", err);
+        alert("فشل الوصول إلى الكاميرا.");
+      });
+
+    // التقاط الصورة عند الضغط على الزر
+    captureButton.addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      // تعيين أبعاد الصورة لتكون نفس أبعاد الفيديو
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      // تحويل الصورة إلى بيانات صورة
+      const dataUrl = canvas.toDataURL('image/png');
+      capturedImage.src = dataUrl;
+
+      // يمكنك هنا إضافة الكود لرفع الصورة إلى الخادم
+      // إرسال البيانات إلى الخادم باستخدام AJAX أو Fetch API
+    });
+  </script>
+
+</body>
+</html>
