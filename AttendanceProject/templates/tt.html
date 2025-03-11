@@ -3,126 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>التقاط صورة باستخدام الكاميرا وقراءة QR Code</title>
+  <title>التقاط صورة وقراءة QR Code</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
     }
-    #videoElement {
-      width: 100%;
-      max-width: 500px;
-      border: 2px solid #000;
-    }
-    #captureButton {
-      padding: 10px 20px;
-      margin-top: 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    #captureButton:hover {
-      background-color: #45a049;
-    }
-    #zoomInButton, #zoomOutButton {
-      padding: 10px 20px;
-      margin-top: 20px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    #zoomInButton:hover, #zoomOutButton:hover {
-      background-color: #0b7dda;
-    }
-    #imageContainer {
-      margin-top: 20px;
-    }
     #capturedImage {
       max-width: 100%;
       max-height: 400px;
+      margin-top: 20px;
+    }
+    #scanResult {
+      margin-top: 20px;
+      font-size: 18px;
+      color: green;
     }
   </style>
 </head>
 <body>
-  <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
-  <h1>التقاط صورة باستخدام الكاميرا وقراءة QR Code</h1>
-  <video id="videoElement" autoplay></video>
-  <button id="zoomInButton">تكبير</button>
-  <button id="zoomOutButton">تصغير</button>
-  <button id="captureButton">التقاط الصورة</button>
 
-  <div id="imageContainer">
-    <h3>الصورة الملتقطة:</h3>
-    <img id="capturedImage" src="" alt="الصورة الملتقطة">
-  </div>
+  <h1>التقاط صورة وقراءة QR Code</h1>
+
+  <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
+  <div id="scanResult"></div>
+
+  <img id="capturedImage" src="" alt="الصورة الملتقطة">
 
   <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 
   <script>
-    const videoElement = document.getElementById('videoElement');
-    const captureButton = document.getElementById('captureButton');
+    const qrImageInput = document.getElementById('qrImageInput');
     const capturedImage = document.getElementById('capturedImage');
-    const zoomInButton = document.getElementById('zoomInButton');
-    const zoomOutButton = document.getElementById('zoomOutButton');
+    const scanResult = document.getElementById('scanResult');
 
-    let currentStream;
-    let currentZoom = 1;
-
-    // الوصول إلى كاميرا المستخدم
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        currentStream = stream;
-        videoElement.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("فشل في الوصول إلى الكاميرا: ", err);
-        alert("فشل في الوصول إلى الكاميرا.");
-      });
-
-    // تكبير الكاميرا
-    zoomInButton.addEventListener('click', () => {
-      if (currentZoom < 3) { // الحد الأقصى للزوم
-        currentZoom += 0.1;
-        videoElement.style.transform = `scale(${currentZoom})`;
+    qrImageInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            capturedImage.src = e.target.result;
+            scanQRCode(img);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
       }
     });
 
-    // تصغير الكاميرا
-    zoomOutButton.addEventListener('click', () => {
-      if (currentZoom > 1) { // الحد الأدنى للزوم
-        currentZoom -= 0.1;
-        videoElement.style.transform = `scale(${currentZoom})`;
-      }
-    });
-
-    // التقاط الصورة عند الضغط على الزر
-    captureButton.addEventListener('click', () => {
+    function scanQRCode(img) {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      // تعيين أبعاد الصورة لتكون نفس أبعاد الفيديو
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-      // تحويل الصورة إلى بيانات صورة
-      const dataUrl = canvas.toDataURL('image/png');
-      capturedImage.src = dataUrl;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      context.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // استخراج QR Code من الصورة
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
 
       if (qrCode) {
-        // إذا تم العثور على رابط في QR Code
+        // إذا تم استخراج الرابط من QR Code
         const url = qrCode.data;
-        console.log("تم استخراج الرابط: ", url);
-        // فتح الرابط تلقائيًا
-        window.location.href = url;
+        scanResult.textContent = `تم استخراج الرابط: ${url}`;
+        window.location.href = url;  // فتح الرابط تلقائيًا
       } else {
-        alert("لم يتم العثور على QR Code في الصورة.");
+        scanResult.textContent = "لم يتم العثور على QR Code في الصورة.";
       }
-    });
+    }
   </script>
 
 </body>
