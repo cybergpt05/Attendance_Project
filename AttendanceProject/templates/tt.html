@@ -25,6 +25,17 @@
     #captureButton:hover {
       background-color: #45a049;
     }
+    #openCameraButton {
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #openCameraButton:hover {
+      background-color: #0b7dda;
+    }
     #imageContainer {
       margin-top: 20px;
     }
@@ -37,6 +48,7 @@
 <body>
 
   <h1>التقاط صورة باستخدام الكاميرا وقراءة QR Code</h1>
+  <button id="openCameraButton">فتح الكاميرا</button>
   <video id="videoElement" autoplay></video>
   <button id="captureButton">التقاط الصورة</button>
 
@@ -48,21 +60,31 @@
   <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 
   <script>
-    // الوصول إلى كاميرا المستخدم
     const videoElement = document.getElementById('videoElement');
     const captureButton = document.getElementById('captureButton');
     const capturedImage = document.getElementById('capturedImage');
+    const openCameraButton = document.getElementById('openCameraButton');
 
-    // اطلب إذن الوصول إلى الكاميرا
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    let currentStream;
+
+    // وظيفة لفتح الكاميرا
+    openCameraButton.addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', 
+          zoom: true // السماح بالزوم
+        }
+      })
       .then(stream => {
         // عرض الفيديو على الصفحة
+        currentStream = stream;
         videoElement.srcObject = stream;
       })
       .catch(err => {
-        console.error("حدث خطأ في الوصول إلى الكاميرا: ", err);
-        alert("فشل الوصول إلى الكاميرا.");
+        console.error("فشل في فتح الكاميرا: ", err);
+        alert("فشل في الوصول إلى الكاميرا.");
       });
+    });
 
     // التقاط الصورة عند الضغط على الزر
     captureButton.addEventListener('click', () => {
