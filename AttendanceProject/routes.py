@@ -180,14 +180,18 @@ def generate_qr_api(course_id):
 
 
 @app.route("/scan_qr/<int:course_id>",methods=["GET","POST"])
+@login_required
 def scan_qr_attendance(course_id):
     token = request.args.get("token")
     course = Course.query.filter_by(id=course_id).first()
-    user = current_user
+    user = User.query.filter_by(id=current_user.id).first()
     if course:
+        print('course_found\n\n')
         enrollments = course.enrolled_students
         if enrollments:
+            print('found enrollments \n\n')
             if user not in enrollments:
+                print('didnt found user\n\n')
                 return abort(403)
         if token:
             qr_token = QRToken.query.filter_by(token=token, course_id=course_id).first()
@@ -197,17 +201,17 @@ def scan_qr_attendance(course_id):
         else:
             flash('Token missing!','danger')
             return redirect(url_for('home'))
+        attendance = Attendance.query.filter_by(student_id=user.id, course_id=course_id).first()
+        if attendance:
+            attendance.attend_time = datetime.now(jordan_tz)
+        else:
+            attendance = Attendance(student_id=user.id, course_id=course_id, attend_time=datetime.now(jordan_tz))
+            db.session.add(attendance)
+        db.session.commit()
+        flash('تم تسجيل الحضور بنجاح!','success')
+        return redirect(url_for('home'))
     else:
         return abort(403)
-    attendance = Attendance.query.filter_by(student_id=user.id, course_id=course_id).first()
-    if attendance:
-        attendance.attend_time = datetime.now(jordan_tz)
-    else:
-        attendance = Attendance(student_id=user.id, course_id=course_id, attend_time=datetime.now(jordan_tz))
-        db.session.add(attendance)
-    db.session.commit()
-    flash('تم تسجيل الحضور بنجاح!','success')
-    return redirect(url_for('home'))
 
 @app.route("/mark_attendance", methods=["POST"])
 @login_required
