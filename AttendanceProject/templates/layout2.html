@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='layout.css') }}">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        {% if title %}
+            <title>{{title}}</title>
+        {% else %}
+            <title>JU Attendance System</title>
+        {% endif %}
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg fixed-top" id="base-nav">
+            <div class="container-fluid">
+                <a href="/" id="brand">
+                    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+                </a>
+                {% if current_user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-link p-0" style="text-decoration: none !important;" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ url_for('static', filename='pfp.png') }}" alt="Profile Picture" style="margin-bottom: 8px !important;" class="rounded-circle" width="40" height="40">
+                            <i class="bi bi-caret-down-fill" style="color: #4c5a73;margin: 4px;"></i>
+                        </button>
+                {% if current_user.account_type == 'admin' %}
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item fw-semibold" href="/profile" style="text-decoration: none !important;"><i class="bi bi-person"></i>  Profile</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/superadmin/add_course" style="text-decoration: none !important;"><i class="bi bi-plus-lg"></i>  Add New Course</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/superadmin/manage_courses" style="text-decoration: none !important;"><i class="bi bi-book"></i>  Manage Courses</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/superadmin/add_user" style="text-decoration: none !important;"><i class="bi bi-person-add"></i>  Add User</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/logout" style="text-decoration: none !important;"><i class="bi bi-box-arrow-left"></i>  Log out</a></li>
+                        </ul>
+                    </div>
+                {% elif current_user.account_type == 'doctor' %}
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item fw-semibold" href="/profile" style="text-decoration: none !important;"><i class="bi bi-person"></i>  Profile</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/doctor/courses" style="text-decoration: none !important;"><i class="bi bi-book"></i>  My Courses</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/doctor/add_course" style="text-decoration: none !important;"><i class="bi bi-plus-lg"></i>  Add New Course</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/logout" style="text-decoration: none !important;"><i class="bi bi-box-arrow-left"></i>  Log out</a></li>
+                        </ul>
+                    </div>
+                {% else %}
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item fw-semibold" href="/profile" style="text-decoration: none !important;"><i class="bi bi-person"></i>  Profile</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/student/courses" style="text-decoration: none !important;"><i class="bi bi-book"></i>  My Courses</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/scan_qr" style="text-decoration: none !important;"><i class="bi bi-qr-code-scan"></i>  Scan QR Code</a></li>
+                            <li><a class="dropdown-item fw-semibold" href="/logout" style="text-decoration: none !important;"><i class="bi bi-box-arrow-left"></i>  Log out</a></li>
+                        </ul>
+                    </div>
+                {% endif %}
+                {% else %}
+                    <a href="/login" class="login fw-bold">Log in</a>
+                {% endif %}
+            </div>
+        </nav>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show text-center" 
+                        role="alert" style="margin-top: 76px !important;">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="margin-top: auto !important; margin-bottom: auto !important;"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+        {% block content %}
+        {% endblock %}
+    </body>
+</html>

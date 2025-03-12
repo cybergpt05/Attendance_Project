@@ -1,0 +1,88 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+
+<div class="container">
+    <div class="card shadow">
+        <fieldset class="form-group">
+            <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
+            <div class="form-group">
+                <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
+                <button id="scanButton" class="btn login-button fw-bold mt-5" style="margin-left: auto; margin-right: auto;">Scan</button>
+                <canvas id="qrCanvas" style="display: none;"></canvas>
+                <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
+            </div>
+        </fieldset>
+    </div>
+</div>
+
+<script>
+    let selectedImage = null;
+    const alertDiv = document.getElementById('alertDiv');
+
+    document.getElementById('qrImageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            selectedImage = new Image();
+            selectedImage.onload = function() {
+                console.log("تم تحميل الصورة بنجاح");
+            };
+            selectedImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('scanButton').addEventListener('click', function() {
+        if (!selectedImage || !selectedImage.complete) {
+            showAlert("الرجاء رفع صورة أولًا وانتظار تحميلها.", "danger");
+            return;
+        }
+
+        const canvas = document.getElementById('qrCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ضبط حجم الـ canvas بناءً على الصورة
+        canvas.width = selectedImage.naturalWidth;
+        canvas.height = selectedImage.naturalHeight;
+        ctx.drawImage(selectedImage, 0, 0, selectedImage.naturalWidth, selectedImage.naturalHeight);
+
+        console.log("تم رسم الصورة على الـ Canvas، جاري محاولة الفحص...");
+
+        // استخراج بيانات الصورة
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+        if (code) {
+            console.log("تم العثور على كود QR:", code.data);
+            if (isValidURL(code.data)) {
+                showAlert(`<a href="${code.data}" target="_blank">فتح الرابط: ${code.data}</a>`, "success");
+            } else {
+                showAlert(`نتيجة QR: ${code.data}`, "success");
+            }
+        } else {
+            console.log("لم يتم العثور على كود QR.");
+            showAlert("لم يتم العثور على كود QR أو الصورة غير واضحة.", "danger");
+        }
+    });
+
+    function isValidURL(str) {
+        try {
+            new URL(str);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function showAlert(message, type) {
+        alertDiv.innerHTML = message;
+        alertDiv.className = `alert alert-${type} text-center mt-5`;
+        alertDiv.hidden = false;
+    }
+</script>
+
+{% endblock %}
