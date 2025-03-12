@@ -13,7 +13,7 @@ import os,qrcode,time,secrets,pytz,csv,io
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
     token = secrets.token_urlsafe(16)
-    expiration_time = time.time() + 15
+    expiration_time = time.time() + 20
     existing_token = QRToken.query.filter_by(course_id=course_id).first()
     
     if existing_token:
@@ -55,8 +55,8 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
-            flash('Incorrect email or password.','danger')
-    return render_template('login.html',form=form)
+            flash('Incorrect email or password!','danger')
+    return render_template('login.html', title="Login Page", form=form)
 
 @app.route('/logout',methods=["GET"])
 def logout():
@@ -64,7 +64,7 @@ def logout():
         logout_user()
         return redirect(url_for('home'))
     else:
-        flash('You are already logged out.','info')
+        flash('You are already logged out!','info')
         return redirect(url_for('home'))
     return redirect(url_for('home'))
 
@@ -84,15 +84,15 @@ def profile():
         else:
             flash('current password is incorrect!','danger')
             return redirect(url_for('profile'))
-    return render_template('profile.html',title=f'{name} Dashboard',form=form)
+    return render_template('profile.html', title=f'{name} Dashboard',form=form)
 
 @app.route('/superadmin/add_course',methods=["GET","POST"])
 @login_required
 def add_course():
     user = current_user
-    form = AddCourseForm()
     if user.account_type != 'admin':
-        abort(403)
+        return abort(403)
+    form = AddCourseForm()
     if form.validate_on_submit():
         try:
             course_name = form.name.data
@@ -104,14 +104,14 @@ def add_course():
             flash(f'{course_name} Course was added successfully to dr.{doctor.first_name} {doctor.last_name} courses list.','success')
         except NotFound:
             flash('No doctors assigned with this name.','danger')
-    return render_template('add_course.html',title='Admin Panel',form=form)
+    return render_template('add_course.html',title='Add New Course',form=form)
 
 @app.route('/superadmin/add_user',methods=["GET","POST"])
 @login_required
 def add_user():
     user = current_user
     if user.account_type != 'admin':
-        abort(403)
+        return abort(403)
     form = AddUserForm()
     if form.validate_on_submit():
         first_name = form.first_name.data
@@ -134,12 +134,15 @@ def add_user():
 @app.route('/doctor/course/<int:course_id>',methods=["GET","POST"])
 @login_required
 def course_details(course_id):
+    if current_user.account_type != 'doctor':
+        return abort(403)
     course = Course.query.get_or_404(course_id)
+    course_name = course.course_name
     doctor_id = course.doctor_id
+    if current_user.id != doctor_id:
+        return abort(403)
     enrolled_students = course.enrolled_students
     student_statuses = {}
-    if current_user.id != doctor_id:
-        abort(403)
     token = generate_qr(course_id)
     if course and enrolled_students:
         for student in enrolled_students:
@@ -149,11 +152,13 @@ def course_details(course_id):
                 student_statuses[student.id] = 'حاضر'
             else:
                 student_statuses[student.id] = 'غائب'
-    return render_template('course_details.html', course=course, students=enrolled_students,student_statuses=student_statuses)
+    return render_template('course_details.html', title=course_name, course=course, students=enrolled_students,student_statuses=student_statuses)
 
 @app.route('/doctor/course/check_attendance/<int:course_id>',methods=["POST"])
 @login_required
 def check_attendance(course_id):
+    if current_user.account_type != 'doctor':
+        return abort(403)
     course = Course.query.get_or_404(course_id)
     student_statuses = {}
     if course:
@@ -173,9 +178,11 @@ def check_attendance(course_id):
         return abort(403)
     return jsonify(student_statuses)
 
-@app.route('/doctor/course/generate_qr/<int:course_id>', methods=["GET"])
+@app.route('/doctor/course/generate_qr/<int:course_id>', methods=["GET","POST"])
 @login_required
 def generate_qr_api(course_id):
+    if current_user.account_type != 'doctor':
+        return abort(403)
     course = Course.query.get_or_404(course_id)
     if current_user.id != course.doctor_id:
         abort(403)
@@ -193,7 +200,7 @@ def scan_qr_attendance(course_id):
         enrollments = course.enrolled_students
         if enrollments:
             if user not in enrollments:
-                abort(403)
+                return abort(403)
         else:
             return abort(403)
         if token:
@@ -202,7 +209,7 @@ def scan_qr_attendance(course_id):
                 flash('Invalid QR Code format or the code has been expired!','danger')
                 return redirect(url_for('home'))
         else:
-            flash('Token missing!','danger')
+            flash('Token is missing!','danger')
             return redirect(url_for('home'))
         attendance = Attendance.query.filter_by(student_id=user.id, course_id=course_id).first()
         if attendance:
@@ -219,11 +226,13 @@ def scan_qr_attendance(course_id):
 @app.route("/mark_attendance", methods=["POST"])
 @login_required
 def mark_attendance():
+    if current_user.account_type != 'doctor':
+        return abort(403)
     data = request.get_json()
     student_id = data.get("student_id")
     course_id = data.get("course_id")
     if current_user.id != Course.query.filter_by(id=course_id).first().doctor_id:
-        abort(403)
+        return abort(403)
     if not student_id or not course_id:
         return jsonify({"success": False, "message": "بيانات غير صحيحة"}), 400
 
@@ -242,11 +251,13 @@ def mark_attendance():
 @app.route("/mark_absent", methods=["POST"])
 @login_required
 def mark_absent():
+    if current_user.account_type != 'doctor':
+        return abort(403)
     data = request.get_json()
     student_id = data.get("student_id")
     course_id = data.get("course_id")
     if current_user.id != Course.query.filter_by(id=course_id).first().doctor_id:
-        abort(403)
+        return abort(403)
     if not student_id or not course_id:
         return jsonify({"success": False, "message": "بيانات غير صحيحة"}), 400
 
@@ -261,11 +272,13 @@ def mark_absent():
 @app.route('/doctor/add_student/<int:course_id>', methods=["GET", "POST"])
 @login_required
 def add_student(course_id):
+    if current_user.account_type != 'doctor':
+        return abort(403)
     user = current_user
     course = Course.query.filter_by(id=course_id).first()
     if course:
         if user.id != course.doctor_id:
-            abort(403)
+            return abort(403)
         form = DoctorAddStudent()
         if form.validate_on_submit():
             student_id = form.student_id.data
@@ -291,9 +304,9 @@ def add_student(course_id):
 @login_required
 def manage_courses():
     user = current_user
-    form = ManageCoursesForm()
     if user.account_type != 'admin':
         abort(403)
+    form = ManageCoursesForm()
     courses = db.session.query(Course, User).join(User, Course.doctor_id == User.id).all()
     if form.validate_on_submit():
         course_name = form.name.data
@@ -310,15 +323,15 @@ def manage_courses():
         db.session.delete(course)
         db.session.commit()
         return redirect(url_for('manage_courses'))
-    return render_template('admin_manage_courses.html', title='Admin Panel', form=form, courses=courses)
+    return render_template('admin_manage_courses.html', title='Manage Courses', form=form, courses=courses)
 
 @app.route('/doctor/courses', methods=["GET", "POST"])
 @login_required
 def doctor_courses():
     user = current_user
-    form = DoctorCoursesForm()
     if user.account_type != 'doctor':
         abort(403)
+    form = DoctorCoursesForm()
     courses = user.courses
     courses_data = []
     for course in courses:
@@ -331,9 +344,9 @@ def doctor_courses():
 @login_required
 def student_courses():
     user = current_user
-    form = StudentCoursesForm()
     if user.account_type != 'student':
         abort(403)
+    form = StudentCoursesForm()
     courses = user.enrolled_courses
     return render_template('student_courses.html', title='My Courses', form=form, courses=courses)
 
@@ -376,6 +389,8 @@ def student_course_details(course_id):
 @app.route('/doctor/course/<int:course_id>/attendance', methods=["GET", "POST"])
 @login_required
 def course_attendance(course_id):
+    if current_user.account_type != 'doctor':
+        abort(403)
     course = Course.query.get_or_404(course_id)
     students = course.enrolled_students
     doctor_id = course.doctor_id
@@ -415,7 +430,7 @@ def course_attendance(course_id):
         response.headers["Content-Disposition"] = f"attachment; filename={course.course_name}_attendance.csv"
         return response
 
-    return render_template("course_attendance.html", course=course, students=students, attendance_data=attendance_data)
+    return render_template("course_attendance.html", title="Students Attendances", course=course, students=students, attendance_data=attendance_data)
 
 @app.route('/doctor/add_course', methods=["GET", "POST"])
 @login_required
@@ -439,6 +454,8 @@ def doctor_add_course():
 @login_required
 def remove_student(course_id):
     user = current_user
+    if user.account_type != 'doctor':
+        abort(403)
     course = Course.query.filter_by(id=course_id).first()
     if course:
         if user.id != course.doctor_id:
@@ -463,4 +480,9 @@ def remove_student(course_id):
                 flash('Error in student number or course was not found!','danger')
     else:
         return abort(403)
-    return render_template('remove_student.html', title='Enroll a student', form=form, course=course)
+    return render_template('remove_student.html', title='Remove a student', form=form, course=course)
+
+@app.route('/scan_qr', methods=["GET", "POST"])
+@login_required
+def sca_a_qr():
+    return render_template("scan_qr.html")
