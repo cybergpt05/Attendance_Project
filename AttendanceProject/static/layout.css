@@ -21,13 +21,14 @@ nav{
     margin-left: 10px !important;
 }
 .login{
-    color: #364fc7;
     text-decoration: none;
     font-size: 20px;
     margin-right: 20px;
+    color: #162d44;
+    transition: ease 0.5s;
 }
 .login:hover{
-    text-decoration: underline;
+    letter-spacing: 1px;
 }
 #section {
     position: relative;
