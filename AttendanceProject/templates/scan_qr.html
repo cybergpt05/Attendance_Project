@@ -18,56 +18,37 @@
 </div>
 
 <script type="module">
-    import { BrowserQRCodeReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
+    import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
 
-    let selectedImage = null;
-    const alertDiv = document.getElementById('alertDiv');
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("qrImageInput");
+        const alertDiv = document.getElementById("alertDiv");
 
-    document.getElementById('qrImageInput').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        fileInput.addEventListener("change", async function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            selectedImage = new Image();
-            selectedImage.onload = function() {
-                showAlert("تم تحميل الصورة بنجاح، اضغط فحص.", "info");
+            const imageURL = URL.createObjectURL(file);
+            const img = new Image();
+            img.src = imageURL;
+            img.onload = async function () {
+                try {
+                    const result = await QrScanner.scanImage(img);
+                    window.location.href = result;
+                } catch (error) {
+                    showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
+                }
             };
-            selectedImage.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+        });
 
-    document.getElementById('scanButton').addEventListener('click', async function() {
-        if (!selectedImage || !selectedImage.complete) {
-            showAlert("الرجاء رفع صورة وانتظار تحميلها.", "danger");
-            return;
-        }
-
-        const canvas = document.getElementById('qrCanvas');
-        const ctx = canvas.getContext('2d');
-
-        canvas.width = selectedImage.naturalWidth;
-        canvas.height = selectedImage.naturalHeight;
-        ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const codeReader = new BrowserQRCodeReader();
-
-        try {
-            const result = await codeReader.decodeFromCanvas(canvas);
-            window.location.href = result.text;
-        } catch (error) {
-            showAlert("لم يتم العثور على كود QR. تأكد من وضوح الصورة.", "danger");
+        function showAlert(message, type) {
+            alertDiv.innerHTML = message;
+            alertDiv.className = `alert alert-${type} text-center mt-5`;
+            alertDiv.hidden = false;
         }
     });
-
-    function showAlert(message, type) {
-        alertDiv.innerHTML = message;
-        alertDiv.className = `alert alert-${type} text-center mt-5`;
-        alertDiv.hidden = false;
-    }
 </script>
+
 
 
 {% endblock %}
