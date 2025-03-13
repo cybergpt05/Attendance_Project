@@ -495,6 +495,7 @@ def manage_users():
         abort(403)
     form = ManageUsersForm()
     users = User.query.all()
+    users_length = len(users)
     if form.validate_on_submit():
         uni_number = form.uni_number.data
         Id = form.Id.data
@@ -504,4 +505,4 @@ def manage_users():
         db.session.commit()
         flash('User deleted successfully!','success')
         return redirect(url_for('manage_users'))
-    return render_template('admin_manage_users.html', title='Manage Users', form=form, users=users)
+    return render_template('admin_manage_users.html', title='Manage Users', users_length=users_length, form=form, users=users)
