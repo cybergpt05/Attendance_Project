@@ -1,6 +1,6 @@
 {% extends "layout2.html" %}
 {% block content %}
-<link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
+<link rel="stylesheet" href="{{url_for('static',filename='scan_qr.css')}}">
 <div class="container">
   <div class="card shadow">
     <fieldset class="form-group">
@@ -8,125 +8,81 @@
       
       <div class="form-group">
         <div class="mb-3">
-          <input type="file" id="qrImageInput" class="form-control" capture="environment" accept="image/*">
+          <input type="file" id="qrFileInput" class="form-control" capture="environment" accept="image/*">
           <small class="form-text text-muted">Tap to select image or take photo</small>
         </div>
         
-        <div id="previewContainer" class="text-center mb-3" style="display: none;">
-          <p>Preview:</p>
-          <img id="imagePreview" style="max-width: 100%; max-height: 300px;" />
-        </div>
+        <button id="scanBtn" class="btn scan-button fw-bold mt-5 mb-3" style="margin-left: auto; margin-right: auto;" disabled>Scan QR Code</button>
         
-        <button id="scanButton" class="btn login-button fw-bold mt-3 mb-3" style="margin-left: auto; margin-right: auto; width: 100%;" disabled>Scan QR Code</button>
-        
-        <div id="loadingIndicator" class="text-center mt-3 mb-3" style="display: none;">
+        <div id="spinner" class="text-center mt-3 mb-3" style="display: none;">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
           <p>Processing image...</p>
         </div>
         
-        <div id="resultContainer" class="mt-4" style="display: none;">
-          <div id="alertDiv" class="alert text-center" role="alert"></div>
-          <div id="qrContent" class="mt-3" style="display: none;">
-            <p class="fw-bold">QR Code Content:</p>
-            <div id="contentDisplay" class="border p-3 rounded"></div>
-            <div class="mt-3">
-              <button id="openUrlButton" class="btn btn-sm btn-primary" style="display: none;">Open URL</button>
-              <button id="copyButton" class="btn btn-sm btn-secondary">Copy Content</button>
-            </div>
-          </div>
-        </div>
+        <div id="msgBox" class="alert text-center mt-3" role="alert" hidden></div>
       </div>
     </fieldset>
   </div>
 </div>
 
 <script type="module">
-  const qrImageInput = document.getElementById('qrImageInput');
-  const scanButton = document.getElementById('scanButton');
-  const alertDiv = document.getElementById('alertDiv');
-  const imagePreview = document.getElementById('imagePreview');
-  const previewContainer = document.getElementById('previewContainer');
-  const loadingIndicator = document.getElementById('loadingIndicator');
-  const resultContainer = document.getElementById('resultContainer');
-  const qrContent = document.getElementById('qrContent');
-  const contentDisplay = document.getElementById('contentDisplay');
-  const openUrlButton = document.getElementById('openUrlButton');
-  const copyButton = document.getElementById('copyButton');
+  const fileInput = document.getElementById('qrFileInput');
+  const scanBtn = document.getElementById('scanBtn');
+  const msgBox = document.getElementById('msgBox');
+  const spinner = document.getElementById('spinner');
   
-  let currentFile = null;
-  let imageResizeCanvas = document.createElement('canvas');
-  let imageResizeCtx = imageResizeCanvas.getContext('2d');
+  let imgFile = null;
+  let canvas = document.createElement('canvas');
+  let ctx = canvas.getContext('2d');
   
-  // When an image is selected
-  qrImageInput.addEventListener('change', function() {
+  fileInput.addEventListener('change', function() {
     if (this.files.length) {
-      currentFile = this.files[0];
-      scanButton.disabled = false;
-      
-      // Display image preview
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        imagePreview.src = e.target.result;
-        previewContainer.style.display = 'block';
-        
-        // Hide previous results
-        resultContainer.style.display = 'none';
-      };
-      reader.readAsDataURL(currentFile);
+      imgFile = this.files[0];
+      scanBtn.disabled = false;
+      msgBox.hidden = true;
     } else {
-      scanButton.disabled = true;
-      previewContainer.style.display = 'none';
+      scanBtn.disabled = true;
     }
   });
   
-  // Scan button click event
-  scanButton.addEventListener('click', function() {
-    if (currentFile) {
-      // Show loading indicator
-      loadingIndicator.style.display = 'block';
-      resultContainer.style.display = 'none';
+  scanBtn.addEventListener('click', function() {
+    if (imgFile) {
+      spinner.style.display = 'block';
+      msgBox.hidden = true;
       
-      // Try to scan with multiple methods
-      scanQRCode(currentFile);
+      doScan(imgFile);
     } else {
-      showResult('Please capture a QR code image', false);
+      showMsg('Please capture a QR code image', false);
     }
   });
   
-  // Function to scan the QR Code from the selected image
-  async function scanQRCode(file) {
+  async function doScan(file) {
     try {
-      // First try with jsQR if available
-      const jsQRResult = await tryJsQR(file);
-      if (jsQRResult) {
-        processResult(jsQRResult);
+      let result = await scanWithJsQR(file);
+      if (result) {
+        handleResult(result);
         return;
       }
       
-      // If jsQR fails, try with the API
-      const apiResult = await tryApiScan(file);
-      if (apiResult) {
-        processResult(apiResult);
+      result = await scanWithAPI(file);
+      if (result) {
+        handleResult(result);
         return;
       }
       
-      // If both methods fail
-      showResult('Could not decode QR code. Try with better lighting or a clearer image.', false);
-    } catch (error) {
-      console.error('Error scanning QR code:', error);
-      showResult('Error processing image: ' + error.message, false);
+      showMsg('Could not decode QR code. Try with better lighting or a clearer image.', false);
+    } catch (err) {
+      showMsg('Error scanning image', false);
     } finally {
-      loadingIndicator.style.display = 'none';
+      spinner.style.display = 'none';
     }
   }
   
-  // Try to scan using jsQR library
-  async function tryJsQR(file) {
+  async function scanWithJsQR(file) {
     return new Promise((resolve) => {
       try {
-        // Check if jsQR is available
         if (typeof jsQR !== 'function') {
           return resolve(null);
         }
@@ -135,22 +91,17 @@
         reader.onload = function() {
           const img = new Image();
           img.onload = function() {
-            // Prepare canvas for image processing
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Set canvas dimensions to match image
             canvas.width = img.width;
             canvas.height = img.height;
             
-            // Draw image on canvas
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            // Get image data for QR processing
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
-            // Process with jsQR
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            const code = jsQR(imgData.data, imgData.width, imgData.height);
             
             if (code && code.data) {
               resolve({ text: code.data });
@@ -161,71 +112,62 @@
           img.src = reader.result;
         };
         reader.readAsDataURL(file);
-      } catch (error) {
-        console.warn('jsQR scan failed:', error);
+      } catch (err) {
         resolve(null);
       }
     });
   }
   
-  // Try to scan using the API
-  async function tryApiScan(file) {
+  async function scanWithAPI(file) {
     try {
-      // First, optimize the image
-      const optimizedImage = await optimizeImage(file);
+      const optimized = await resizeImg(file);
       
-      // Call the API
-      const apiUrl = `https://api.qrserver.com/v1/read-qr-code/`;
+      const url = `https://api.qrserver.com/v1/read-qr-code/`;
       const formData = new FormData();
-      formData.append("file", optimizedImage);
+      formData.append("file", optimized);
       
-      const response = await fetch(apiUrl, {
+      const resp = await fetch(url, {
         method: "POST",
         body: formData
       });
       
-      const data = await response.json();
+      const data = await resp.json();
       
       if (data[0] && data[0].symbol && data[0].symbol[0] && data[0].symbol[0].data) {
         return { text: data[0].symbol[0].data };
       }
       
       return null;
-    } catch (error) {
-      console.warn('API scan failed:', error);
+    } catch (err) {
       return null;
     }
   }
   
-  // Optimize image before sending to API
-  async function optimizeImage(file) {
+  async function resizeImg(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = function() {
         const img = new Image();
         img.onload = function() {
-          // Calculate new dimensions (max 1000px width/height while maintaining aspect ratio)
-          let width = img.width;
-          let height = img.height;
+          let w = img.width;
+          let h = img.height;
           
-          if (width > height && width > 1000) {
-            height = Math.round((height * 1000) / width);
-            width = 1000;
-          } else if (height > width && height > 1000) {
-            width = Math.round((width * 1000) / height);
-            height = 1000;
+          if (w > h && w > 1000) {
+            h = Math.round((h * 1000) / w);
+            w = 1000;
+          } else if (h > w && h > 1000) {
+            w = Math.round((w * 1000) / h);
+            h = 1000;
           }
           
-          // Resize image
-          imageResizeCanvas.width = width;
-          imageResizeCanvas.height = height;
-          imageResizeCtx.drawImage(img, 0, 0, width, height);
+          canvas.width = w;
+          canvas.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
           
-          // Convert to blob with improved quality
-          imageResizeCanvas.toBlob(
+          canvas.toBlob(
             (blob) => resolve(blob),
             'image/jpeg',
-            0.9  // Higher quality
+            0.9
           );
         };
         img.src = reader.result;
@@ -234,64 +176,39 @@
     });
   }
   
-  // Process and display result
-  function processResult(result) {
+  function handleResult(result) {
     if (!result || !result.text) {
-      showResult('No QR code found in image', false);
+      showMsg('No QR code found in image', false);
       return;
     }
     
     const content = result.text.trim();
-    showResult('QR code successfully scanned!', true);
     
-    // Display the content
-    qrContent.style.display = 'block';
-    contentDisplay.textContent = content;
-    
-    // Check if content is a URL
-    if (isValidURL(content)) {
-      openUrlButton.style.display = 'inline-block';
-      openUrlButton.onclick = function() {
-        window.open(content, '_blank');
-      };
+    if (isUrl(content)) {
+      showMsg('QR code detected! Marking attendance...', true);
+      setTimeout(() => {
+        window.location.href = content;
+      }, 1000);
     } else {
-      openUrlButton.style.display = 'none';
+      showMsg('QR code detected...', true);
     }
-    
-    // Setup copy button
-    copyButton.onclick = function() {
-      navigator.clipboard.writeText(content)
-        .then(() => {
-          const originalText = copyButton.textContent;
-          copyButton.textContent = 'Copied!';
-          setTimeout(() => {
-            copyButton.textContent = originalText;
-          }, 2000);
-        })
-        .catch(err => {
-          console.error('Error copying text:', err);
-        });
-    };
   }
   
-  // Check if string is a valid URL
-  function isValidURL(string) {
+  function isUrl(str) {
     try {
-      new URL(string);
+      new URL(str);
       return true;
     } catch (_) {
       return false;
     }
   }
   
-  // Show result in alert div
-  function showResult(message, success) {
-    alertDiv.textContent = message;
-    alertDiv.className = `alert ${success ? 'alert-success' : 'alert-danger'}`;
-    resultContainer.style.display = 'block';
+  function showMsg(message, success) {
+    msgBox.textContent = message;
+    msgBox.className = `alert ${success ? 'alert-success' : 'alert-danger'}`;
+    msgBox.hidden = false;
   }
   
-  // Add jsQR library if not present
   if (typeof jsQR !== 'function') {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
