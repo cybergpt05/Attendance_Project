@@ -17,7 +17,9 @@
     </div>
 </div>
 
-<script>
+<script type="module">
+    import { BrowserQRCodeReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@latest/+esm";
+
     let selectedImage = null;
     const alertDiv = document.getElementById('alertDiv');
 
@@ -50,10 +52,10 @@
         ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const codeReader = new ZXingBrowser.BrowserQRCodeReader();
+        const codeReader = new BrowserQRCodeReader();
 
         try {
-            const result = await codeReader.decodeFromImageElement(selectedImage);
+            const result = await codeReader.decodeFromCanvas(canvas);
             window.location.href = result.text;
         } catch (error) {
             showAlert("لم يتم العثور على كود QR. تأكد من وضوح الصورة.", "danger");
@@ -66,5 +68,6 @@
         alertDiv.hidden = false;
     }
 </script>
+
 
 {% endblock %}
