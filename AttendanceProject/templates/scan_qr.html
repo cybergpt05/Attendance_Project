@@ -1,54 +1,67 @@
-{% extends "layout2.html" %}
-{% block content %}
-<link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest"></script>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code</title>
+    <script type="module">
+        import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
 
-<div class="container">
-    <div class="card shadow">
-        <fieldset class="form-group">
-            <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
-            <div class="form-group">
-                <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
-                <button id="scanButton" class="btn login-button fw-bold mt-5" style="margin-left: auto; margin-right: auto;">Scan</button>
-                <canvas id="qrCanvas" style="display: none;"></canvas>
-                <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
-            </div>
-        </fieldset>
-    </div>
-</div>
+        document.addEventListener("DOMContentLoaded", function () {
+            const fileInput = document.getElementById("qrImageInput");
+            const alertDiv = document.getElementById("alertDiv");
 
-<script type="module">
-    import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
+            fileInput.addEventListener("change", async function (event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const fileInput = document.getElementById("qrImageInput");
-        const alertDiv = document.getElementById("alertDiv");
+                const imageURL = URL.createObjectURL(file);
+                const img = new Image();
+                img.src = imageURL;
+                img.onload = async function () {
+                    const mirroredImage = mirrorImage(img); // عكس الصورة
 
-        fileInput.addEventListener("change", async function (event) {
-            const file = event.target.files[0];
-            if (!file) return;
+                    try {
+                        const result = await QrScanner.scanImage(mirroredImage);
+                        window.location.href = result; // فتح الرابط مباشرة
+                    } catch (error) {
+                        showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
+                    }
+                };
+            });
 
-            const imageURL = URL.createObjectURL(file);
-            const img = new Image();
-            img.src = imageURL;
-            img.onload = async function () {
-                try {
-                    const result = await QrScanner.scanImage(img);
-                    window.location.href = result;
-                } catch (error) {
-                    showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
-                }
-            };
+            function mirrorImage(img) {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.translate(img.width, 0);
+                ctx.scale(-1, 1); // عكس الصورة أفقيًا
+                ctx.drawImage(img, 0, 0);
+
+                return canvas;
+            }
+
+            function showAlert(message, type) {
+                alertDiv.innerHTML = message;
+                alertDiv.className = `alert alert-${type} text-center mt-5`;
+                alertDiv.hidden = false;
+            }
         });
-
-        function showAlert(message, type) {
-            alertDiv.innerHTML = message;
-            alertDiv.className = `alert alert-${type} text-center mt-5`;
-            alertDiv.hidden = false;
-        }
-    });
-</script>
-
-
-
-{% endblock %}
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="card shadow">
+            <fieldset class="form-group">
+                <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
+                <div class="form-group">
+                    <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
+                    <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</body>
+</html>
