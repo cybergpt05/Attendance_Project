@@ -1,93 +1,301 @@
 {% extends "layout2.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest"></script>
-
 <div class="container">
-    <div class="card shadow">
-        <fieldset class="form-group">
-            <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
-            <div class="form-group">
-                <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
-                <button id="scanButton" class="btn login-button fw-bold mt-5" style="margin-left: auto; margin-right: auto;">Scan</button>
-                <canvas id="qrCanvas" style="display: none;"></canvas>
-                <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
+  <div class="card shadow">
+    <fieldset class="form-group">
+      <center class="fw-bold mb-4" style="font-size: 1.5rem !important;">Scan QR Code</center>
+      
+      <div class="form-group">
+        <div class="mb-3">
+          <input type="file" id="qrImageInput" class="form-control" capture="environment" accept="image/*">
+          <small class="form-text text-muted">Tap to select image or take photo</small>
+        </div>
+        
+        <div id="previewContainer" class="text-center mb-3" style="display: none;">
+          <p>Preview:</p>
+          <img id="imagePreview" style="max-width: 100%; max-height: 300px;" />
+        </div>
+        
+        <button id="scanButton" class="btn login-button fw-bold mt-3 mb-3" style="margin-left: auto; margin-right: auto; width: 100%;" disabled>Scan QR Code</button>
+        
+        <div id="loadingIndicator" class="text-center mt-3 mb-3" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p>Processing image...</p>
+        </div>
+        
+        <div id="resultContainer" class="mt-4" style="display: none;">
+          <div id="alertDiv" class="alert text-center" role="alert"></div>
+          <div id="qrContent" class="mt-3" style="display: none;">
+            <p class="fw-bold">QR Code Content:</p>
+            <div id="contentDisplay" class="border p-3 rounded"></div>
+            <div class="mt-3">
+              <button id="openUrlButton" class="btn btn-sm btn-primary" style="display: none;">Open URL</button>
+              <button id="copyButton" class="btn btn-sm btn-secondary">Copy Content</button>
             </div>
-        </fieldset>
-    </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
 </div>
 
-<script>
-    const qrImageInput = document.getElementById('qrImageInput');
-    const scanButton = document.getElementById('scanButton');
-    const alertDiv = document.getElementById('alertDiv');
-    const qrCanvas = document.getElementById('qrCanvas');
-    const ctx = qrCanvas.getContext('2d');
-    
-    // الضغط على زر Scan
-    scanButton.addEventListener('click', () => {
-        if (qrImageInput.files.length > 0) {
-            const file = qrImageInput.files[0];
-            compressImage(file, 0.7, 800).then(compressedFile => {
-                scanQRCode(compressedFile);
-            });
+<script type="module">
+  const qrImageInput = document.getElementById('qrImageInput');
+  const scanButton = document.getElementById('scanButton');
+  const alertDiv = document.getElementById('alertDiv');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewContainer = document.getElementById('previewContainer');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  const resultContainer = document.getElementById('resultContainer');
+  const qrContent = document.getElementById('qrContent');
+  const contentDisplay = document.getElementById('contentDisplay');
+  const openUrlButton = document.getElementById('openUrlButton');
+  const copyButton = document.getElementById('copyButton');
+  
+  let currentFile = null;
+  let imageResizeCanvas = document.createElement('canvas');
+  let imageResizeCtx = imageResizeCanvas.getContext('2d');
+  
+  // When an image is selected
+  qrImageInput.addEventListener('change', function() {
+    if (this.files.length) {
+      currentFile = this.files[0];
+      scanButton.disabled = false;
+      
+      // Display image preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreview.src = e.target.result;
+        previewContainer.style.display = 'block';
+        
+        // Hide previous results
+        resultContainer.style.display = 'none';
+      };
+      reader.readAsDataURL(currentFile);
+    } else {
+      scanButton.disabled = true;
+      previewContainer.style.display = 'none';
+    }
+  });
+  
+  // Scan button click event
+  scanButton.addEventListener('click', function() {
+    if (currentFile) {
+      // Show loading indicator
+      loadingIndicator.style.display = 'block';
+      resultContainer.style.display = 'none';
+      
+      // Try to scan with multiple methods
+      scanQRCode(currentFile);
+    } else {
+      showResult('Please capture a QR code image', false);
+    }
+  });
+  
+  // Function to scan the QR Code from the selected image
+  async function scanQRCode(file) {
+    try {
+      // First try with jsQR if available
+      const jsQRResult = await tryJsQR(file);
+      if (jsQRResult) {
+        processResult(jsQRResult);
+        return;
+      }
+      
+      // If jsQR fails, try with the API
+      const apiResult = await tryApiScan(file);
+      if (apiResult) {
+        processResult(apiResult);
+        return;
+      }
+      
+      // If both methods fail
+      showResult('Could not decode QR code. Try with better lighting or a clearer image.', false);
+    } catch (error) {
+      console.error('Error scanning QR code:', error);
+      showResult('Error processing image: ' + error.message, false);
+    } finally {
+      loadingIndicator.style.display = 'none';
+    }
+  }
+  
+  // Try to scan using jsQR library
+  async function tryJsQR(file) {
+    return new Promise((resolve) => {
+      try {
+        // Check if jsQR is available
+        if (typeof jsQR !== 'function') {
+          return resolve(null);
         }
-    });
-
-    // ضغط الصورة لتقليل الحجم قبل الإرسال
-    function compressImage(file, quality, maxWidth) {
-        return new Promise((resolve) => {
-            const img = new Image();
+        
+        const reader = new FileReader();
+        reader.onload = function() {
+          const img = new Image();
+          img.onload = function() {
+            // Prepare canvas for image processing
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-
-            img.onload = function() {
-                let width = img.width;
-                let height = img.height;
-                if (width > maxWidth) {
-                    height = (maxWidth / width) * height;
-                    width = maxWidth;
-                }
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob(blob => {
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now()
-                    });
-                    resolve(compressedFile);
-                }, 'image/jpeg', quality);
-            };
-            img.src = URL.createObjectURL(file);
-        });
-    }
-
-    // استخدام API ZXing لفحص الـ QR code
-    function scanQRCode(file) {
-        const reader = new ZXing.BrowserQRCodeReader();
-        
-        const readerConfig = {
-            tryHarder: true,
-            delayBetweenScanAttempts: 500,
+            
+            // Set canvas dimensions to match image
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            // Draw image on canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data for QR processing
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Process with jsQR
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code && code.data) {
+              resolve({ text: code.data });
+            } else {
+              resolve(null);
+            }
+          };
+          img.src = reader.result;
         };
-
-        reader.decodeFromImageUrl(URL.createObjectURL(file), readerConfig)
-            .then(result => {
-                alertDiv.textContent = `QR Code Scanned: ${result.text}`;
-                alertDiv.classList.remove('alert-danger');
-                alertDiv.classList.add('alert-success');
-                alertDiv.hidden = false;
-            })
-            .catch(err => {
-                alertDiv.textContent = 'Failed to decode QR code. Please try again.';
-                alertDiv.classList.remove('alert-success');
-                alertDiv.classList.add('alert-danger');
-                alertDiv.hidden = false;
-                console.error('Error scanning QR code:', err);
-            });
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.warn('jsQR scan failed:', error);
+        resolve(null);
+      }
+    });
+  }
+  
+  // Try to scan using the API
+  async function tryApiScan(file) {
+    try {
+      // First, optimize the image
+      const optimizedImage = await optimizeImage(file);
+      
+      // Call the API
+      const apiUrl = `https://api.qrserver.com/v1/read-qr-code/`;
+      const formData = new FormData();
+      formData.append("file", optimizedImage);
+      
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (data[0] && data[0].symbol && data[0].symbol[0] && data[0].symbol[0].data) {
+        return { text: data[0].symbol[0].data };
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('API scan failed:', error);
+      return null;
     }
+  }
+  
+  // Optimize image before sending to API
+  async function optimizeImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function() {
+        const img = new Image();
+        img.onload = function() {
+          // Calculate new dimensions (max 1000px width/height while maintaining aspect ratio)
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height && width > 1000) {
+            height = Math.round((height * 1000) / width);
+            width = 1000;
+          } else if (height > width && height > 1000) {
+            width = Math.round((width * 1000) / height);
+            height = 1000;
+          }
+          
+          // Resize image
+          imageResizeCanvas.width = width;
+          imageResizeCanvas.height = height;
+          imageResizeCtx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to blob with improved quality
+          imageResizeCanvas.toBlob(
+            (blob) => resolve(blob),
+            'image/jpeg',
+            0.9  // Higher quality
+          );
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  
+  // Process and display result
+  function processResult(result) {
+    if (!result || !result.text) {
+      showResult('No QR code found in image', false);
+      return;
+    }
+    
+    const content = result.text.trim();
+    showResult('QR code successfully scanned!', true);
+    
+    // Display the content
+    qrContent.style.display = 'block';
+    contentDisplay.textContent = content;
+    
+    // Check if content is a URL
+    if (isValidURL(content)) {
+      openUrlButton.style.display = 'inline-block';
+      openUrlButton.onclick = function() {
+        window.open(content, '_blank');
+      };
+    } else {
+      openUrlButton.style.display = 'none';
+    }
+    
+    // Setup copy button
+    copyButton.onclick = function() {
+      navigator.clipboard.writeText(content)
+        .then(() => {
+          const originalText = copyButton.textContent;
+          copyButton.textContent = 'Copied!';
+          setTimeout(() => {
+            copyButton.textContent = originalText;
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('Error copying text:', err);
+        });
+    };
+  }
+  
+  // Check if string is a valid URL
+  function isValidURL(string) {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  
+  // Show result in alert div
+  function showResult(message, success) {
+    alertDiv.textContent = message;
+    alertDiv.className = `alert ${success ? 'alert-success' : 'alert-danger'}`;
+    resultContainer.style.display = 'block';
+  }
+  
+  // Add jsQR library if not present
+  if (typeof jsQR !== 'function') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+    document.head.appendChild(script);
+  }
 </script>
-
 {% endblock %}
