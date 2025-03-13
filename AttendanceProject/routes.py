@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 from AttendanceProject.forms import AdminAddStudent,ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
 from werkzeug.exceptions import NotFound
 from datetime import datetime
-import os,qrcode,time,secrets,pytz,csv
+import os,qrcode,time,secrets,pytz,csv,io
 
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
