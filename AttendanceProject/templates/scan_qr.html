@@ -1,54 +1,99 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan QR Code</title>
-    <script type="module">
-    import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
+<div class="container">
+    <div class="card shadow">
+        <fieldset class="form-group">
+            <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
+            <div class="form-group">
+                <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
+                <button id="scanButton" class="btn login-button fw-bold mt-5 mb-3" style="margin-left: auto; margin-right: auto;">Scan</button>
+                <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
+            </div>
+        </fieldset>
+    </div>
+</div>
+<script type="module">
+    const qrImageInput = document.getElementById('qrImageInput');
+    const scanButton = document.getElementById('scanButton');
+    const alertDiv = document.getElementById('alertDiv');
+    let currentFile = null;
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const video = document.getElementById("qr-video");
-        const alertDiv = document.getElementById("alertDiv");
-
-        // إعداد الماسح الضوئي
-        const scanner = new QrScanner(video, async result => {
-            handleScanResult(result);
-        }, {
-            preferredCamera: 'environment', // تحديد الكاميرا الخلفية تلقائيًا
-            returnDetailedScanResult: true
-        });
-
-        scanner.start();
-
-        function handleScanResult(result) {
-            if (result) {
-                window.location.href = result.data;
-            } else {
-                showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
-            }
-        }
-
-        function showAlert(message, type) {
-            alertDiv.innerHTML = message;
-            alertDiv.className = `alert alert-${type} text-center mt-5`;
-            alertDiv.hidden = false;
+    // When an image is selected
+    qrImageInput.addEventListener('change', function() {
+        if (this.files.length) {
+            currentFile = this.files[0];
+            scanButton.disabled = false;
+        } else {
+            scanButton.disabled = true;
         }
     });
+
+    // Scan button click event
+    scanButton.addEventListener('click', function() {
+        if (currentFile) {
+            scanQRCode(currentFile);
+        } else {
+            showResult('Please capture a QR code image', false);
+        }
+    });
+
+    // Function to scan the QR Code from the selected image using API
+    async function scanQRCode(file) {
+        const reader = new FileReader();
+        reader.onload = async function() {
+            const imgDataUrl = reader.result; // Get the base64 encoded image
+
+            try {
+                const result = await scanQRCodeWithAPI(imgDataUrl); // Call the API with the image data
+                showResult(`QR Code result: ${result.text}`, true);
+            } catch (err) {
+                showResult('Failed to decode QR code', false);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Function to call the API for QR code scanning
+    async function scanQRCodeWithAPI(imageDataUrl) {
+        const apiUrl = `https://api.qrserver.com/v1/read-qr-code/`;
+        
+        // Send the image to the API
+        const formData = new FormData();
+        formData.append("file", dataURLtoBlob(imageDataUrl));
+
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+        if (data[0] && data[0].symbol[0].data) {
+            return { text: data[0].symbol[0].data };
+        } else {
+            throw new Error('No QR code found');
+        }
+    }
+
+    // Function to convert base64 image data to Blob
+    function dataURLtoBlob(dataURL) {
+        const byteString = atob(dataURL.split(',')[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: 'image/png' });
+    }
+
+    // Show result in alert div
+    function showResult(message, success) {
+        alertDiv.textContent = message;
+        alertDiv.className = `alert ${success ? 'alert-success' : 'alert-danger'}`;
+        alertDiv.hidden = false;
+    }
 </script>
 
-</head>
-<body>
-    <div class="container">
-        <div class="card shadow">
-            <fieldset class="form-group">
-                <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
-                <div class="form-group">
-                    <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
-                    <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
-                </div>
-            </fieldset>
-        </div>
-    </div>
-</body>
-</html>
+
+
+{% endblock %}
