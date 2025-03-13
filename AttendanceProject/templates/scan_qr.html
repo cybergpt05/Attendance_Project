@@ -1,7 +1,7 @@
 {% extends "layout2.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="{{ url_for('static', filename='jsQR.js') }}"></script>
 
 <div class="container">
     <div class="card shadow">
@@ -28,9 +28,7 @@
         const reader = new FileReader();
         reader.onload = function(event) {
             selectedImage = new Image();
-            selectedImage.onload = function() {
-                console.log("تم تحميل الصورة بنجاح");
-            };
+            selectedImage.onload = function() {};
             selectedImage.src = event.target.result;
         };
         reader.readAsDataURL(file);
@@ -38,34 +36,27 @@
 
     document.getElementById('scanButton').addEventListener('click', function() {
         if (!selectedImage || !selectedImage.complete) {
-            showAlert("الرجاء رفع صورة أولًا وانتظار تحميلها.", "danger");
+            showAlert("يرجى رفع صورة وانتظار تحميلها.", "danger");
             return;
         }
 
         const canvas = document.getElementById('qrCanvas');
         const ctx = canvas.getContext('2d');
-
-        // ضبط حجم الـ canvas بناءً على الصورة
         canvas.width = selectedImage.naturalWidth;
         canvas.height = selectedImage.naturalHeight;
-        ctx.drawImage(selectedImage, 0, 0, selectedImage.naturalWidth, selectedImage.naturalHeight);
+        ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
 
-        console.log("تم رسم الصورة على الـ Canvas، جاري محاولة الفحص...");
-
-        // استخراج بيانات الصورة
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, canvas.width, canvas.height);
 
         if (code) {
-            console.log("تم العثور على كود QR:", code.data);
             if (isValidURL(code.data)) {
-                showAlert(`<a href="${code.data}" target="_blank">فتح الرابط: ${code.data}</a>`, "success");
+                window.open(code.data, "_blank");
             } else {
-                showAlert(`نتيجة QR: ${code.data}`, "success");
+                showAlert("تم العثور على كود، لكنه غير صالح كرابط.", "warning");
             }
         } else {
-            console.log("لم يتم العثور على كود QR.");
-            showAlert("لم يتم العثور على كود QR أو الصورة غير واضحة.", "danger");
+            showAlert("لم يتم العثور على كود QR في الصورة.", "danger");
         }
     });
 
