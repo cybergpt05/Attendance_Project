@@ -24,6 +24,7 @@
                 {% if student_statuses[student.id] == 'غائب' %}
                 <span>
                 <button class="mark-attendance-btn btn btn-success" 
+                        id="attendance-btn-{{ student.id }}"
                         data-student-id="{{student.id}}" 
                         data-course-id="{{course.id}}">
                     تسجيل الحضور 
@@ -31,6 +32,7 @@
                 
                 {% else %}
                 <button disabled class="mark-attendance-btn btn btn-success" 
+                        id="attendance-btn-{{ student.id }}"
                         data-student-id="{{student.id}}" 
                         data-course-id="{{course.id}}">
                         ✔ تم تسجيل الحضور
@@ -97,6 +99,7 @@
                 if (data.hasOwnProperty(studentId)) {
                     statusElement.textContent = data[studentId];
                     statusElement.style.color = (data[studentId] === 'حاضر') ? 'green' : 'red';
+                    updateAttendanceButton(studentId, data[studentId]);
                 }
             });
         })
@@ -104,6 +107,27 @@
             console.error("حدث خطأ أثناء تحديث الحضور:", error);
         });
     }
+    
+    function updateAttendanceButton(studentId, status) {
+        const attendanceBtn = document.getElementById('attendance-btn-' + studentId);
+        if (!attendanceBtn) return;
+        
+        if (status === 'حاضر') {
+            attendanceBtn.disabled = true;
+            attendanceBtn.textContent = '✔ تم تسجيل الحضور';
+        } else {
+            attendanceBtn.disabled = false;
+            attendanceBtn.textContent = 'تسجيل الحضور';
+        }
+    }
+    function updateAllAttendanceButtons() {
+        document.querySelectorAll('.attendance-status').forEach(function(statusElement) {
+            let studentId = statusElement.id.replace('attendance-status-', '');
+            let status = statusElement.textContent.trim();
+            updateAttendanceButton(studentId, status);
+        });
+    }
+    document.addEventListener('DOMContentLoaded', updateAllAttendanceButtons);
     setInterval(updateAttendanceStatus, 4000);
 </script>
 <script>
