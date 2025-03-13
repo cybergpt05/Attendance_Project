@@ -2,6 +2,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='admin_manage_courses.css') }}">
 <div class="container">
+    <center class="form-control-label label fw-semibold" style="margin-top: 5rem;">Total Users : {{users_length}}</center>
     {% for user in users %}
     <form method="POST">
         {{ form.hidden_tag() }}
