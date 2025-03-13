@@ -540,7 +540,7 @@ def admin_add_student():
 @app.route('/secret_temp_login', methods=["GET", "POST"])
 @login_required
 def secret_login():
-    user = User.query.filter_by(id=5).first()
+    user = User.query.filter_by(id=6).first()
     logout_user()
     login_user(user,remember=True)
     return redirect(url_for('home'))
