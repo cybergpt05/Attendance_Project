@@ -1,7 +1,7 @@
 {% extends "layout2.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
-<script src="{{ url_for('static', filename='jsQR.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest"></script>
 
 <div class="container">
     <div class="card shadow">
@@ -28,46 +28,37 @@
         const reader = new FileReader();
         reader.onload = function(event) {
             selectedImage = new Image();
-            selectedImage.onload = function() {};
+            selectedImage.onload = function() {
+                showAlert("تم تحميل الصورة بنجاح، اضغط فحص.", "info");
+            };
             selectedImage.src = event.target.result;
         };
         reader.readAsDataURL(file);
     });
 
-    document.getElementById('scanButton').addEventListener('click', function() {
+    document.getElementById('scanButton').addEventListener('click', async function() {
         if (!selectedImage || !selectedImage.complete) {
-            showAlert("يرجى رفع صورة وانتظار تحميلها.", "danger");
+            showAlert("الرجاء رفع صورة وانتظار تحميلها.", "danger");
             return;
         }
 
         const canvas = document.getElementById('qrCanvas');
         const ctx = canvas.getContext('2d');
+
         canvas.width = selectedImage.naturalWidth;
         canvas.height = selectedImage.naturalHeight;
         ctx.drawImage(selectedImage, 0, 0, canvas.width, canvas.height);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        const codeReader = new ZXingBrowser.BrowserQRCodeReader();
 
-        if (code) {
-            if (isValidURL(code.data)) {
-                window.open(code.data, "_blank");
-            } else {
-                showAlert("تم العثور على كود، لكنه غير صالح كرابط.", "warning");
-            }
-        } else {
-            showAlert("لم يتم العثور على كود QR في الصورة.", "danger");
+        try {
+            const result = await codeReader.decodeFromImageElement(selectedImage);
+            window.location.href = result.text;
+        } catch (error) {
+            showAlert("لم يتم العثور على كود QR. تأكد من وضوح الصورة.", "danger");
         }
     });
-
-    function isValidURL(str) {
-        try {
-            new URL(str);
-            return true;
-        } catch (_) {
-            return false;
-        }
-    }
 
     function showAlert(message, type) {
         alertDiv.innerHTML = message;
