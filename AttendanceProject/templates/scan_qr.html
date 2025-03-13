@@ -1,99 +1,93 @@
 {% extends "layout2.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{url_for('static',filename='login.css')}}">
+<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@latest"></script>
+
 <div class="container">
     <div class="card shadow">
         <fieldset class="form-group">
             <center class="fw-bold mb-5" style="font-size: 1.5rem !important;">Scan QR Code</center>
             <div class="form-group">
                 <input type="file" id="qrImageInput" class="form-control mb-3" capture="environment" accept="image/*">
-                <button id="scanButton" class="btn login-button fw-bold mt-5 mb-3" style="margin-left: auto; margin-right: auto;">Scan</button>
+                <button id="scanButton" class="btn login-button fw-bold mt-5" style="margin-left: auto; margin-right: auto;">Scan</button>
+                <canvas id="qrCanvas" style="display: none;"></canvas>
                 <div id="alertDiv" class="alert text-center mt-5" role="alert" hidden></div>
             </div>
         </fieldset>
     </div>
 </div>
-<script type="module">
+
+<script>
     const qrImageInput = document.getElementById('qrImageInput');
     const scanButton = document.getElementById('scanButton');
     const alertDiv = document.getElementById('alertDiv');
-    let currentFile = null;
-
-    // When an image is selected
-    qrImageInput.addEventListener('change', function() {
-        if (this.files.length) {
-            currentFile = this.files[0];
-            scanButton.disabled = false;
-        } else {
-            scanButton.disabled = true;
+    const qrCanvas = document.getElementById('qrCanvas');
+    const ctx = qrCanvas.getContext('2d');
+    
+    // الضغط على زر Scan
+    scanButton.addEventListener('click', () => {
+        if (qrImageInput.files.length > 0) {
+            const file = qrImageInput.files[0];
+            compressImage(file, 0.7, 800).then(compressedFile => {
+                scanQRCode(compressedFile);
+            });
         }
     });
 
-    // Scan button click event
-    scanButton.addEventListener('click', function() {
-        if (currentFile) {
-            scanQRCode(currentFile);
-        } else {
-            showResult('Please capture a QR code image', false);
-        }
-    });
+    // ضغط الصورة لتقليل الحجم قبل الإرسال
+    function compressImage(file, quality, maxWidth) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
 
-    // Function to scan the QR Code from the selected image using API
-    async function scanQRCode(file) {
-        const reader = new FileReader();
-        reader.onload = async function() {
-            const imgDataUrl = reader.result; // Get the base64 encoded image
+            img.onload = function() {
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
 
-            try {
-                const result = await scanQRCodeWithAPI(imgDataUrl); // Call the API with the image data
-                showResult(`QR Code result: ${result.text}`, true);
-            } catch (err) {
-                showResult('Failed to decode QR code', false);
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // Function to call the API for QR code scanning
-    async function scanQRCodeWithAPI(imageDataUrl) {
-        const apiUrl = `https://api.qrserver.com/v1/read-qr-code/`;
-        
-        // Send the image to the API
-        const formData = new FormData();
-        formData.append("file", dataURLtoBlob(imageDataUrl));
-
-        const response = await fetch(apiUrl, {
-            method: "POST",
-            body: formData
+                canvas.toBlob(blob => {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            img.src = URL.createObjectURL(file);
         });
-
-        const data = await response.json();
-        if (data[0] && data[0].symbol[0].data) {
-            return { text: data[0].symbol[0].data };
-        } else {
-            throw new Error('No QR code found');
-        }
     }
 
-    // Function to convert base64 image data to Blob
-    function dataURLtoBlob(dataURL) {
-        const byteString = atob(dataURL.split(',')[1]);
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-        return new Blob([ab], { type: 'image/png' });
-    }
+    // استخدام API ZXing لفحص الـ QR code
+    function scanQRCode(file) {
+        const reader = new ZXing.BrowserQRCodeReader();
+        
+        const readerConfig = {
+            tryHarder: true,
+            delayBetweenScanAttempts: 500,
+        };
 
-    // Show result in alert div
-    function showResult(message, success) {
-        alertDiv.textContent = message;
-        alertDiv.className = `alert ${success ? 'alert-success' : 'alert-danger'}`;
-        alertDiv.hidden = false;
+        reader.decodeFromImageUrl(URL.createObjectURL(file), readerConfig)
+            .then(result => {
+                alertDiv.textContent = `QR Code Scanned: ${result.text}`;
+                alertDiv.classList.remove('alert-danger');
+                alertDiv.classList.add('alert-success');
+                alertDiv.hidden = false;
+            })
+            .catch(err => {
+                alertDiv.textContent = 'Failed to decode QR code. Please try again.';
+                alertDiv.classList.remove('alert-success');
+                alertDiv.classList.add('alert-danger');
+                alertDiv.hidden = false;
+                console.error('Error scanning QR code:', err);
+            });
     }
 </script>
-
-
 
 {% endblock %}
