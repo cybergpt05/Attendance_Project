@@ -391,12 +391,14 @@ def student_course_details(course_id):
 def course_attendance(course_id):
     if current_user.account_type != 'doctor':
         abort(403)
+    
     course = Course.query.get_or_404(course_id)
     students = course.enrolled_students
     doctor_id = course.doctor_id
+    
     if current_user.id != doctor_id:
         abort(403)
-
+        
     attendance_records = Attendance.query.filter_by(course_id=course_id).all()
     attendance_data = [
         {
@@ -407,31 +409,34 @@ def course_attendance(course_id):
         }
         for record in attendance_records
     ]
-
+    
     if request.method == "POST":
         student_id = request.form.get("student_id")
         filtered_records = [record for record in attendance_records if student_id == "all" or str(record.student_id) == student_id]
-
+        
         if not filtered_records:
             flash("لا يوجد بيانات حضور لتنزيلها!", "warning")
             return redirect(url_for('course_attendance', course_id=course_id))
-
+            
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(["اسم الطالب", "الرقم الجامعي", "التاريخ والوقت"])
-
+        
         for record in filtered_records:
             student = User.query.get(record.student_id)
             writer.writerow([f"{student.first_name} {student.last_name}", student.uni_number, record.attend_time.strftime('%Y-%m-%d %I:%M:%S %p')])
-
+            
         output.seek(0)
-        
         response = Response(output, content_type="text/csv")
-        response.headers["Content-Disposition"] = f"attachment; filename={course.course_name}_attendance.csv"
+
+        import urllib.parse
+        filename = f"{course.course_name}_attendance.csv"
+        encoded_filename = urllib.parse.quote(filename)
+        response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
+        
         return response
-
+        
     return render_template("course_attendance.html", title="Students Attendances", course=course, students=students, attendance_data=attendance_data)
-
 @app.route('/doctor/add_course', methods=["GET", "POST"])
 @login_required
 def doctor_add_course():
