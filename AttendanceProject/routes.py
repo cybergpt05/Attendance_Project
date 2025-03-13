@@ -542,4 +542,5 @@ def admin_add_student():
 def secret_login():
     user = User.query.filter_by(id=5).first()
     logout_user()
-    return login_user(user,remember=True)
+    login_user(user,remember=True)
+    return redirect(url_for('home'))
