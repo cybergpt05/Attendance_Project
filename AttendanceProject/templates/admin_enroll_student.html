@@ -1,0 +1,40 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='enroll_student.css')}}">
+<div class="container">
+    <form action="" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="card shadow">
+            <fieldset class="form-group">
+            <div class="form-group">
+                {{ form.student_id.label(class="form-control-label label fw-semibold mt-3")}}
+                {% if form.student_id.errors %}
+                {{ form.student_id(class="form-control form-control-sm is-invalid")}}
+                <div class="invalid-feedback">
+                {%for error in form.student_id.errors %}
+                <span>{{error}}</span>
+                {%endfor%}
+                </div>
+                {%else%}
+                {{ form.student_id(class="form-control form-control-sm name")}}
+                {%endif%}
+            </div>
+            <div class="form-group">
+                {{ form.course.label(class="form-control-label label fw-semibold")}}
+                {% if form.course.errors %}
+                {{ form.course(class="form-control form-control-sm is-invalid")}}
+                <div class="invalid-feedback">
+                {%for error in form.course.errors %}
+                <span>{{error}}</span>
+                {%endfor%}
+                </div>
+                {%else%}
+                {{ form.course(class="form-control form-control-sm name")}}
+                {%endif%}
+            </div>
+                <center><div class="form-group">{{ form.submit(class="btn add-button fw-semibold")}}</div></center>
+            </fieldset>
+        </div>
+    </form>
+</div>
+{% endblock %}
