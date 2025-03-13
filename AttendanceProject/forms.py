@@ -49,3 +49,8 @@ class DoctorAddCourseForm(FlaskForm):
 class DoctorRemoveStudent(FlaskForm):
     student_id= StringField('University Number',validators=[DataRequired()])
     submit = SubmitField('Remove Student')
+class ManageUsersForm(FlaskForm):
+    name = StringField('Student Name',validators=[DataRequired()])
+    Id = StringField('',validators=[DataRequired()])
+    uni_number = StringField('University Number',validators=[DataRequired()])
+    submit = SubmitField('Delete User')
