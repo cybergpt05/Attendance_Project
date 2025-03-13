@@ -5,51 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scan QR Code</title>
     <script type="module">
-        import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
+    import QrScanner from "https://unpkg.com/qr-scanner@latest/qr-scanner.min.js";
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const fileInput = document.getElementById("qrImageInput");
-            const alertDiv = document.getElementById("alertDiv");
+    document.addEventListener("DOMContentLoaded", function () {
+        const video = document.getElementById("qr-video");
+        const alertDiv = document.getElementById("alertDiv");
 
-            fileInput.addEventListener("change", async function (event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const imageURL = URL.createObjectURL(file);
-                const img = new Image();
-                img.src = imageURL;
-                img.onload = async function () {
-                    const mirroredImage = mirrorImage(img); // عكس الصورة
-
-                    try {
-                        const result = await QrScanner.scanImage(mirroredImage);
-                        window.location.href = result; // فتح الرابط مباشرة
-                    } catch (error) {
-                        showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
-                    }
-                };
-            });
-
-            function mirrorImage(img) {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                canvas.width = img.width;
-                canvas.height = img.height;
-
-                ctx.translate(img.width, 0);
-                ctx.scale(-1, 1); // عكس الصورة أفقيًا
-                ctx.drawImage(img, 0, 0);
-
-                return canvas;
-            }
-
-            function showAlert(message, type) {
-                alertDiv.innerHTML = message;
-                alertDiv.className = `alert alert-${type} text-center mt-5`;
-                alertDiv.hidden = false;
-            }
+        // إعداد الماسح الضوئي
+        const scanner = new QrScanner(video, async result => {
+            handleScanResult(result);
+        }, {
+            preferredCamera: 'environment', // تحديد الكاميرا الخلفية تلقائيًا
+            returnDetailedScanResult: true
         });
-    </script>
+
+        scanner.start();
+
+        function handleScanResult(result) {
+            if (result) {
+                window.location.href = result.data;
+            } else {
+                showAlert("لم يتم العثور على كود QR، تأكد من وضوح الصورة", "danger");
+            }
+        }
+
+        function showAlert(message, type) {
+            alertDiv.innerHTML = message;
+            alertDiv.className = `alert alert-${type} text-center mt-5`;
+            alertDiv.hidden = false;
+        }
+    });
+</script>
+
 </head>
 <body>
     <div class="container">
