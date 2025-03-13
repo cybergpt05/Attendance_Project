@@ -5,7 +5,7 @@ from flask_login import login_user,logout_user,current_user,login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message
 from werkzeug.utils import secure_filename
-from AttendanceProject.forms import DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
+from AttendanceProject.forms import ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
 from werkzeug.exceptions import NotFound
 from datetime import datetime
 import os,qrcode,time,secrets,pytz,csv,io
@@ -486,3 +486,22 @@ def remove_student(course_id):
 @login_required
 def sca_a_qr():
     return render_template("scan_qr.html")
+
+@app.route('/superadmin/manage_users', methods=["GET", "POST"])
+@login_required
+def manage_users():
+    user = current_user
+    if user.account_type != 'admin':
+        abort(403)
+    form = ManageUsersForm()
+    users = User.query.all()
+    if form.validate_on_submit():
+        uni_number = form.uni_number.data
+        Id = form.Id.data
+        user = User.query.filter_by(uni_number=uni_number,id=Id).first()
+        if user:
+            db.session.delete(user)
+        db.session.commit()
+        flash('User deleted successfully!','success')
+        return redirect(url_for('manage_users'))
+    return render_template('admin_manage_users.html', title='Manage Users', form=form, users=users)
