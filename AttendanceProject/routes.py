@@ -5,10 +5,10 @@ from flask_login import login_user,logout_user,current_user,login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message
 from werkzeug.utils import secure_filename
-from AttendanceProject.forms import ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
+from AttendanceProject.forms import AdminAddStudent,ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
 from werkzeug.exceptions import NotFound
 from datetime import datetime
-import os,qrcode,time,secrets,pytz,csv,io
+import os,qrcode,time,secrets,pytz,csv
 
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
@@ -291,7 +291,7 @@ def add_student(course_id):
                         db.session.commit()
                         flash(f'{student.first_name} {student.last_name} was added successfully!','success')
                     except:
-                        flash('Error was happend!','danger')
+                        flash('Error was happend! Contact admin to solve the problem','danger')
                 else:
                     flash('Student already enrolled in this course!','info')
             else:
@@ -506,3 +506,33 @@ def manage_users():
         flash('User deleted successfully!','success')
         return redirect(url_for('manage_users'))
     return render_template('admin_manage_users.html', title='Manage Users', users_length=users_length, form=form, users=users)
+
+@app.route('/superadmin/add_student', methods=["GET", "POST"])
+@login_required
+def admin_add_student():
+    if current_user.account_type != 'admin':
+        return abort(403)
+    user = current_user
+    form = AdminAddStudent()
+    if form.validate_on_submit():
+        student_id = form.student_id.data
+        course_name = form.course.data
+        student = User.query.filter_by(uni_number=student_id).first()
+        course = Course.query.filter_by(course_name=course_name).first()
+        if course:
+            if student:
+                if student not in course.enrolled_students:
+                    course.enrolled_students.append(student)
+                    try:
+                        db.session.commit()
+                        flash(f'{student.first_name} {student.last_name} was added successfully!','success')
+                    except:
+                        flash('Error was happend! Contact admin to solve the problem','danger')
+                else:
+                    flash('Student already enrolled in this course!','info')
+            else:
+                flash('Error in student number or course was not found!','danger')
+        else:
+            flash("This course doesn't exist!",'danger')
+            return redirect(url_for('admin_add_student'))
+    return render_template('admin_enroll_student.html', title='Enroll a student', form=form)
