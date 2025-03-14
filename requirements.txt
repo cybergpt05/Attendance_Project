@@ -12,3 +12,6 @@ email_validator
 gunicorn
 Pillow
 psycopg2
+pdfplumber
+arabic_reshaper
+python-bidi
