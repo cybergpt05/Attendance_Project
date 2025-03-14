@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField,PasswordField,SubmitField
+from wtforms import StringField,PasswordField,SubmitField,SelectField
 from wtforms.validators import DataRequired,Email,ValidationError
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileField, FileRequired,FileAllowed
 from AttendanceProject.models import User
 from flask_login import current_user
 
@@ -58,3 +58,10 @@ class AdminAddStudent(FlaskForm):
     student_id= StringField('University Number',validators=[DataRequired()])
     course = StringField('Course Name',validators=[DataRequired()])
     submit = SubmitField('Add Student')
+class DoctorAddUsers(FlaskForm):
+    file = FileField('Upload students pdf file', validators=[FileRequired(),FileAllowed(['pdf'], 'Only PDF files are allowed!')])
+    submit = SubmitField('Register Students')
+class DoctorEnrollUsers(FlaskForm):
+    file = FileField('Upload students pdf file', validators=[FileRequired(),FileAllowed(['pdf'], 'Only PDF files are allowed!')])
+    course_id = SelectField('Choose course', choices=[], validators=[DataRequired()])
+    submit = SubmitField('Enroll Students')
