@@ -1,0 +1,27 @@
+{% extends "layout2.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{url_for('static',filename='add_user.css')}}">
+<div class="container">
+    <form action="" method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div class="card shadow upload-card">
+            <fieldset class="form-group">
+            <div class="form-group">
+                {{ form.file.label(class="form-control-label label fw-semibold")}}
+                {% if form.file.errors %}
+                {{ form.file(class="form-control form-control-sm is-invalid")}}
+                <div class="invalid-feedback">
+                {%for error in form.file.errors %}
+                <span>{{error}}</span>
+                {%endfor%}
+                </div>
+                {%else%}
+                {{ form.file(class="form-control form-control-sm")}}
+                {%endif%}
+            </div>
+                <center><div class="form-group">{{ form.submit(class="btn add-button register-button fw-semibold")}}</div></center>
+            </fieldset>
+        </div>
+    </form>
+</div>
+{% endblock %}
