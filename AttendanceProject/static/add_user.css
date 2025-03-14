@@ -81,3 +81,20 @@ button {
         height: 710px;
     }
 }
+.upload-card{
+    display: flex;
+    flex-direction: column;
+    padding: 20px !important;
+    justify-content: center !important;
+    margin-top: 100px;
+    width: 35rem !important;
+    height: 300px;
+}
+.enroll-button{
+    width: 10rem !important;
+    margin-top: 2rem;
+}
+.register-button{
+    width: 10rem !important;
+    margin-top: 2rem;
+}
