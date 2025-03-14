@@ -5,10 +5,13 @@ from flask_login import login_user,logout_user,current_user,login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message
 from werkzeug.utils import secure_filename
-from AttendanceProject.forms import AdminAddStudent,ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
+from AttendanceProject.forms import DoctorEnrollUsers,DoctorAddUsers,AdminAddStudent,ManageUsersForm,DoctorRemoveStudent,DoctorAddCourseForm,StudentCoursesForm,ChangePasswordForm,DoctorAddStudent,AddUserForm,LoginForm,AddCourseForm,ManageCoursesForm,DoctorCoursesForm
 from werkzeug.exceptions import NotFound
 from datetime import datetime
 import os,qrcode,time,secrets,pytz,csv,io
+import pdfplumber
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
@@ -541,4 +544,137 @@ def admin_add_student():
             flash("This course doesn't exist!",'danger')
             return redirect(url_for('admin_add_student'))
     return render_template('admin_enroll_student.html', title='Enroll a student', form=form)
+def extract_tables_from_pdf(file):
+    extracted_tables = []
 
+    with pdfplumber.open(file) as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                table_data = []
+                for row in table:
+                    table_data.append(row)
+                extracted_tables.append(table_data)
+
+    return extracted_tables
+@app.route('/doctor/add_students', methods=["GET", "POST"])
+@login_required
+def doctor_add_students():
+    form = DoctorAddUsers()
+    user = current_user
+    if user.account_type != 'doctor':
+        return abort(403)
+    if form.validate_on_submit():
+        file = form.file.data
+        tables = extract_tables_from_pdf(file)
+        added_users = 0
+        exists_users = 0
+        error_users = 0
+        if tables:
+            for idx, table in enumerate(tables):
+                if len(table) > 0:
+                    if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺘﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
+                        flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة','danger')
+                        return redirect(url_for('doctor_add_students'))
+                    table.pop(0)
+                    for row in table:
+                        student_row = list(row)
+                        uni_number = student_row[4]
+                        exists_user = User.query.filter_by(uni_number=uni_number).first()
+                        if exists_user:
+                            exists_users += 1
+                        else:
+                            name = student_row[3]
+                            reshaped_text = arabic_reshaper.reshape(name)
+                            correct_text = get_display(reshaped_text)
+                            full_name = correct_text.split()
+                            first_name = full_name[0]
+                            last_name = " ".join(full_name[1:])
+                            email = uni_number+'@ju.edu.jo'
+                            password = generate_password_hash(uni_number, method="pbkdf2:sha256")
+                            account_type = 'student'
+                            try:
+                                new_user = User(email=email,uni_number=uni_number,password=password,first_name=first_name,last_name=last_name,account_type=account_type)
+                                db.session.add(new_user)
+                                db.session.commit()
+                                added_users += 1
+                            except:
+                                error_users += 1
+            flash(f'تمت اضافة {added_users} طالب جديد','success')
+            if exists_users > 0:
+                flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
+            if error_users > 0:
+                flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
+
+        else:
+            flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
+    return render_template('doctor_add_students.html', title='Add New Students',form=form)
+
+@app.route('/doctor/enroll_students', methods=["GET", "POST"])
+@login_required
+def doctor_enroll_students():
+    form = DoctorEnrollUsers()
+    user = current_user
+    if user.account_type != 'doctor':
+        return abort(403)
+    courses = Course.query.filter_by(doctor_id=user.id)
+    form.course_id.choices = [(course.id, course.course_name) for course in courses]
+    if form.validate_on_submit():
+        file = form.file.data
+        course_id = form.course_id.data
+        print(course_id)
+        tables = extract_tables_from_pdf(file)
+        added_users = 0
+        exists_users = 0
+        error_users = 0
+        if tables:
+            for idx, table in enumerate(tables):
+                if len(table) > 0:
+                    if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺘﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
+                        flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة','danger')
+                        return redirect(url_for('doctor_enroll_students'))
+                    table.pop(0)
+                    for row in table:
+                        student_row = list(row)
+                        uni_number = student_row[4]
+                        course_enrollments = Course.query.filter_by(id=course_id).first()
+                        student = User.query.filter_by(uni_number=uni_number).first()
+                        if student:
+                            if student not in course_enrollments.enrolled_students:
+                                course_enrollments.enrolled_students.append(student)
+                                added_users += 1
+                                db.session.commit()
+                            else:
+                                exists_users += 1
+                        else:
+                            name = student_row[3]
+                            reshaped_text = arabic_reshaper.reshape(name)
+                            correct_text = get_display(reshaped_text)
+                            full_name = correct_text.split()
+                            first_name = full_name[0]
+                            last_name = " ".join(full_name[1:])
+                            email = uni_number+'@ju.edu.jo'
+                            password = generate_password_hash(uni_number, method="pbkdf2:sha256")
+                            account_type = 'student'
+                            try:
+                                new_user = User(email=email,uni_number=uni_number,password=password,first_name=first_name,last_name=last_name,account_type=account_type)
+                                db.session.add(new_user)
+                                db.session.commit()
+                                student_to_enroll = User.query.filter_by(uni_number=uni_number).first()
+                                print(student_to_enroll)
+                                course_enrollments.enrolled_students.append(student_to_enroll)
+                                print(course_enrollments.enrolled_students)
+                                db.session.commit()
+                                added_users += 1
+                            except Exception as e:
+                                print(e)
+                                error_users += 1
+            flash(f'تمت اضافة {added_users} طالب جديد','success')
+            if exists_users > 0:
+                flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
+            if error_users > 0:
+                flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
+
+        else:
+            flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
+    return render_template('doctor_enroll_students.html', title='Enroll Students', courses=courses, form=form)
