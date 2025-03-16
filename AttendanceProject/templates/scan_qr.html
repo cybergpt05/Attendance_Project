@@ -8,7 +8,7 @@
       
       <div class="form-group">
         <div class="mb-3">
-          <input type="file" id="qrFileInput" class="form-control" capture="environment" accept="image/*">
+          <input type="file" id="qrFileInput" class="form-control" capture="environment" accept="image/jpeg,image/png,image/gif,image/webp">
           <small class="form-text text-muted">Tap to select image or take photo</small>
         </div>
         
@@ -39,7 +39,24 @@
   
   fileInput.addEventListener('change', function() {
     if (this.files.length) {
-      imgFile = this.files[0];
+      const file = this.files[0];
+      
+      if (!file.type.startsWith('image/')) {
+        showMsg('Please select only image files', false);
+        fileInput.value = '';
+        scanBtn.disabled = true;
+        return;
+      }
+      
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        showMsg('Please select a valid image format (JPEG, PNG, GIF, WEBP, JPG)', false);
+        fileInput.value = '';
+        scanBtn.disabled = true;
+        return;
+      }
+      
+      imgFile = file;
       scanBtn.disabled = false;
       msgBox.hidden = true;
     } else {
@@ -188,7 +205,7 @@
       showMsg('QR code detected! Marking attendance...', true);
       setTimeout(() => {
         window.location.href = content;
-      }, 1000);
+      }, 250);
     } else {
       showMsg('QR code detected...', true);
     }
