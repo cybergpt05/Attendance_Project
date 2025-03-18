@@ -43,11 +43,6 @@ def generate_qr(course_id):
 @app.route("/")
 @app.route("/home",methods=["GET"])
 def home():
-    db.create_all()
-    password = generate_password_hash('$Ju005Admin#juedujo',method="pbkdf2:sha256")
-    user = User(first_name='Admin',last_name='Account',password=password,email='juadmin@juadmin.edu.jo',account_type='admin')
-    db.session.add(user)
-    db.session.commit()
     return render_template("home.html",title="Home Page")
 
 @app.route('/login',methods=["GET","POST"])
