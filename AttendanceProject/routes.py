@@ -565,51 +565,57 @@ def doctor_add_students():
     if user.account_type != 'doctor':
         return abort(403)
     if form.validate_on_submit():
+        db.session.execute("SET statement_timeout = '600s'")
         file = form.file.data
         tables = extract_tables_from_pdf(file)
         added_users = 0
         exists_users = 0
         error_users = 0
         if tables:
-            for idx, table in enumerate(tables):
-                if len(table) > 0:
-                    if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺘﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
-                        flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة','danger')
-                        return redirect(url_for('doctor_add_students'))
-                    table.pop(0)
-                    for row in table:
-                        student_row = list(row)
-                        uni_number = student_row[4]
-                        exists_user = User.query.filter_by(uni_number=uni_number).first()
-                        if exists_user:
-                            exists_users += 1
-                        else:
-                            name = student_row[3]
-                            reshaped_text = arabic_reshaper.reshape(name)
-                            correct_text = get_display(reshaped_text)
-                            full_name = correct_text.split()
-                            first_name = full_name[0]
-                            last_name = " ".join(full_name[1:])
-                            email = uni_number+'@ju.edu.jo'
-                            password = generate_password_hash(uni_number, method="pbkdf2:sha256")
-                            account_type = 'student'
-                            try:
-                                new_user = User(email=email,uni_number=uni_number,password=password,first_name=first_name,last_name=last_name,account_type=account_type)
+            try:
+                for idx, table in enumerate(tables):
+                    if len(table) > 0:
+                        if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺗﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
+                            flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة', 'danger')
+                            return redirect(url_for('doctor_add_students'))
+                        table.pop(0)
+                        existing_uni_numbers = {user.uni_number for user in User.query.all()}
+                        for row in table:
+                            student_row = list(row)
+                            uni_number = student_row[4]
+                            if uni_number not in existing_uni_numbers:
+                                name = student_row[3]
+                                reshaped_text = arabic_reshaper.reshape(name)
+                                correct_text = get_display(reshaped_text)
+                                full_name = correct_text.split()
+                                first_name = full_name[0]
+                                last_name = " ".join(full_name[1:])
+                                email = uni_number + '@ju.edu.jo'
+                                password = generate_password_hash(uni_number, method="pbkdf2:sha256")
+                                account_type = 'student'
+                                new_user = User(email=email, uni_number=uni_number, password=password, first_name=first_name, last_name=last_name, account_type=account_type)
                                 db.session.add(new_user)
-                                db.session.commit()
                                 added_users += 1
-                            except:
-                                error_users += 1
-            flash(f'تمت اضافة {added_users} طالب جديد','success')
-            if exists_users > 0:
-                flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
-            if error_users > 0:
-                flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
-            return redirect(url_for('doctor_add_students'))
+                            else:
+                                exists_users += 1
 
+                db.session.commit()
+
+            except Exception as e:
+                db.session.rollback()
+                error_users += 1
+                flash(f'حدث خطأ أثناء إضافة الطلاب , حاول اضافتهم مرة أخرى', 'danger')
+                return redirect(url_for('doctor_add_students'))
+                
+            flash(f'تمت إضافة {added_users} طالب جديد', 'success')
+            if exists_users > 0:
+                flash(f'هناك {exists_users} طالب موجودين مسبقًا', 'info')
+            if error_users > 0:
+                flash(f'حدث خطأ أثناء إضافة {error_users}, تواصل مع الآدمن لإضافتهم يدويًا', 'danger')
+            return redirect(url_for('doctor_add_students'))
         else:
-            flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
-    return render_template('doctor_add_students.html', title='Add New Students',form=form)
+            flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعة مباشرة بصيغة بي دي أف', 'danger')
+    return render_template('doctor_add_students.html', title='Add New Students', form=form)
 
 @app.route('/doctor/enroll_students', methods=["GET", "POST"])
 @login_required
