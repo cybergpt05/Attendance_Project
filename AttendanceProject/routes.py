@@ -565,8 +565,6 @@ def doctor_add_students():
     user = current_user
     if user.account_type != 'doctor':
         return abort(403)
-    
-    
     if form.validate_on_submit():
         file = form.file.data
         tables = extract_tables_from_pdf(file)
@@ -576,7 +574,7 @@ def doctor_add_students():
         if tables:
             for idx, table in enumerate(tables):
                 if len(table) > 0:
-                    if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺗﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
+                    if list(table[0]) != ['ﺕﺎﻈﺣﻼﻣ', 'ﻞﻴﺠﺴﺘﻟﺍ ﺦﻳﺭﺎﺗ', 'ﺺﺼﺨﺘﻟﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﺳﺍ', 'ﺐﻟﺎﻄﻟﺍ ﻢﻗﺭ', 'ﻞﺴﻠﺴﺘﻟﺍ']:
                         flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة','danger')
                         return redirect(url_for('doctor_add_students'))
                     table.pop(0)
@@ -597,7 +595,7 @@ def doctor_add_students():
                             password = generate_password_hash(uni_number, method="pbkdf2:sha256")
                             account_type = 'student'
                             try:
-                                new_user = User(email=email, uni_number=uni_number, password=password, first_name=first_name, last_name=last_name, account_type=account_type)
+                                new_user = User(email=email,uni_number=uni_number,password=password,first_name=first_name,last_name=last_name,account_type=account_type)
                                 db.session.add(new_user)
                                 db.session.commit()
                                 added_users += 1
@@ -613,7 +611,6 @@ def doctor_add_students():
         else:
             flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
     return render_template('doctor_add_students.html', title='Add New Students',form=form)
-
 
 @app.route('/doctor/enroll_students', methods=["GET", "POST"])
 @login_required
