@@ -605,6 +605,7 @@ def doctor_add_students():
                 flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
             if error_users > 0:
                 flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
+            return redirect(url_for('doctor_add_students'))
 
         else:
             flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
@@ -674,6 +675,7 @@ def doctor_enroll_students():
                 flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
             if error_users > 0:
                 flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
+            return redirect(url_for('doctor_add_students'))
 
         else:
             flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
