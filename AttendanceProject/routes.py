@@ -568,7 +568,6 @@ def doctor_add_students():
     
     
     if form.validate_on_submit():
-        db.session.execute(text("SET statement_timeout = '600s'"))
         file = form.file.data
         tables = extract_tables_from_pdf(file)
         added_users = 0
