@@ -12,7 +12,7 @@ import os,qrcode,time,secrets,pytz,csv,io
 import pdfplumber
 import arabic_reshaper
 from bidi.algorithm import get_display
-from flask_sqlalchemy import text
+from sqlalchemy import text
 
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
