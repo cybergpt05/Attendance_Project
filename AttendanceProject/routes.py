@@ -578,6 +578,11 @@ def doctor_add_students():
                         flash('الملف غير صالح, تأكد أنه بصيغة بي دي أف, وأن ترتيب العواميد يطابق الصيغة الأساسيه المعتمدة بالجامعة','danger')
                         return redirect(url_for('doctor_add_students'))
                     table.pop(0)
+                    
+                    # مسح الجدول الاول وتحضير البيانات
+                    batch_size = 10  # حجم الدفعة
+                    batch = []
+                    
                     for row in table:
                         student_row = list(row)
                         uni_number = student_row[4]
@@ -585,29 +590,46 @@ def doctor_add_students():
                         if exists_user:
                             exists_users += 1
                         else:
-                            name = student_row[3]
-                            reshaped_text = arabic_reshaper.reshape(name)
-                            correct_text = get_display(reshaped_text)
-                            full_name = correct_text.split()
-                            first_name = full_name[0]
-                            last_name = " ".join(full_name[1:])
-                            email = uni_number+'@ju.edu.jo'
-                            password = generate_password_hash(uni_number, method="pbkdf2:sha256")
-                            account_type = 'student'
                             try:
-                                new_user = User(email=email,uni_number=uni_number,password=password,first_name=first_name,last_name=last_name,account_type=account_type)
-                                db.session.add(new_user)
-                                db.session.commit()
-                                added_users += 1
-                            except:
+                                name = student_row[3]
+                                reshaped_text = arabic_reshaper.reshape(name)
+                                correct_text = get_display(reshaped_text)
+                                full_name = correct_text.split()
+                                first_name = full_name[0]
+                                last_name = " ".join(full_name[1:])
+                                email = uni_number+'@ju.edu.jo'
+                                password = generate_password_hash(uni_number, method="pbkdf2:sha256")
+                                account_type = 'student'
+                                
+                                new_user = User(email=email, uni_number=uni_number, password=password,
+                                              first_name=first_name, last_name=last_name, account_type=account_type)
+                                
+                                batch.append(new_user)
+                                
+                                # إذا وصلنا لحجم الدفعة المطلوب، نقوم بالإضافة وعمل commit
+                                if len(batch) >= batch_size:
+                                    db.session.add_all(batch)
+                                    db.session.commit()
+                                    added_users += len(batch)
+                                    batch = []  # إفراغ الدفعة للدورة التالية
+                            except Exception as e:
                                 error_users += 1
+                    
+                    # إضافة المتبقي من الدفعة الأخيرة
+                    if batch:
+                        try:
+                            db.session.add_all(batch)
+                            db.session.commit()
+                            added_users += len(batch)
+                        except:
+                            error_users += len(batch)
+            
             flash(f'تمت اضافة {added_users} طالب جديد','success')
             if exists_users > 0:
                 flash(f'هناك {exists_users} طالب موجودين مسبقا','info')
             if error_users > 0:
                 flash(F'حدث خطأ اثناء اضافة {error_users}, تواصل مع الآدمن لاضافتهم يدويا','danger')
             return redirect(url_for('doctor_add_students'))
-
         else:
             flash('لا يوجد جداول طلاب بالملف, يرجى تنزيل الكشف من موقع الجامعه مباشرة بصيغة بي دي أف','danger')
     return render_template('doctor_add_students.html', title='Add New Students',form=form)
