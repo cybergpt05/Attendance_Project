@@ -12,6 +12,7 @@ import os,qrcode,time,secrets,pytz,csv,io
 import pdfplumber
 import arabic_reshaper
 from bidi.algorithm import get_display
+from flask_sqlalchemy import text
 
 jordan_tz = pytz.timezone('Asia/Amman')
 def generate_qr(course_id):
@@ -565,7 +566,7 @@ def doctor_add_students():
     if user.account_type != 'doctor':
         return abort(403)
     if form.validate_on_submit():
-        db.session.execute("SET statement_timeout = '600s'")
+        db.session.execute(text("SET statement_timeout = '600s'"))
         file = form.file.data
         tables = extract_tables_from_pdf(file)
         added_users = 0
