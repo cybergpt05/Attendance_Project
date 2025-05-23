@@ -579,8 +579,7 @@ def doctor_add_students():
                         return redirect(url_for('doctor_add_students'))
                     table.pop(0)
                     
-                    # مسح الجدول الاول وتحضير البيانات
-                    batch_size = 10  # حجم الدفعة
+                    batch_size = 10
                     batch = []
                     
                     for row in table:
@@ -606,16 +605,14 @@ def doctor_add_students():
                                 
                                 batch.append(new_user)
                                 
-                                # إذا وصلنا لحجم الدفعة المطلوب، نقوم بالإضافة وعمل commit
                                 if len(batch) >= batch_size:
                                     db.session.add_all(batch)
                                     db.session.commit()
                                     added_users += len(batch)
-                                    batch = []  # إفراغ الدفعة للدورة التالية
+                                    batch = []
                             except Exception as e:
                                 error_users += 1
                     
-                    # إضافة المتبقي من الدفعة الأخيرة
                     if batch:
                         try:
                             db.session.add_all(batch)
