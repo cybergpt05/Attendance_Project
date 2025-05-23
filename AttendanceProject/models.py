@@ -41,7 +41,6 @@ class Attendance(db.Model):
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     attend_time = db.Column(db.DateTime, nullable=False)
-    # Course relationship (for convenience)
     course = db.relationship('Course', backref='attendance_records')
 class QRToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
